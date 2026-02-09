@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1일 권장량 분석 - 뉴트리-스캐너</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Noto Sans KR', sans-serif; 
+            background: linear-gradient(135deg, 
+                rgba(173, 216, 230, 0.6) 0%, 
+                rgba(176, 224, 230, 0.5) 25%,
+                rgba(200, 230, 240, 0.4) 50%,
+                rgba(220, 240, 250, 0.5) 75%,
+                rgba(240, 248, 255, 0.6) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 720px;
+            background: #1a1a1a;
+            border-radius: 55px;
+            padding: 12px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #F5F5F7;
+            border-radius: 45px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .dynamic-island {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 125px;
+            height: 37px;
+            background: #000;
+            border-radius: 25px;
+            z-index: 100;
+        }
+
+        .status-bar {
+            height: 54px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 28px 6px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .status-time { font-weight: 700; font-size: 16px; }
+        .status-icons { display: flex; gap: 6px; font-size: 17px; }
+
+        .app-content {
+            height: calc(100% - 54px - 25px);
+            overflow-y: auto;
+        }
+
+        .app-content::-webkit-scrollbar { display: none; }
+
+        .home-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 135px;
+            height: 5px;
+            background: #000;
+            border-radius: 5px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #20B2AA 0%, #2E8B7A 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+        .header h1 { font-size: 1.5em; margin-bottom: 8px; }
+        .header p { font-size: 0.9em; opacity: 0.9; }
+
+        .back-link {
+            display: inline-block;
+            padding: 12px 15px;
+            color: #20B2AA;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .card {
+            background: white;
+            margin: 15px;
+            padding: 15px;
+            border-radius: 18px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .nutrient-item {
+            padding: 15px 0;
+            border-bottom: 1px solid #F0F0F0;
+        }
+
+        .nutrient-item:last-child { border-bottom: none; }
+
+        .nutrient-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .nutrient-header .icon { font-size: 1.2em; }
+
+        .nutrient-header .name {
+            font-weight: 600;
+            color: #222;
+            flex: 1;
+        }
+
+        .nutrient-header .status {
+            font-size: 0.8em;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        .status-good { background: #E8F5E9; color: #2E7D32; }
+        .status-warning { background: #FFF8E1; color: #F57C00; }
+        .status-danger { background: #FFEBEE; color: #C62828; }
+        .status-unknown { background: #F5F5F5; color: #757575; }
+
+        .nutrient-info {
+            font-size: 0.85em;
+            color: #1A0033;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: #E0E0E0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.5s;
+        }
+
+        .progress-good { background: linear-gradient(90deg, #66BB6A, #43A047); }
+        .progress-warning { background: linear-gradient(90deg, #FFB74D, #FF9800); }
+        .progress-danger { background: linear-gradient(90deg, #EF5350, #E53935); }
+
+        .nutrient-detail {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95em;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(180deg, #F5F5F5 0%, #E0E0E0 100%);
+            color: #333;
+            box-shadow: 0 3px 0 #BDBDBD;
+        }
+
+        .btn-primary {
+            background: linear-gradient(180deg, #26C6BC 0%, #20B2AA 50%, #1A9690 100%);
+            color: white;
+            box-shadow: 0 4px 0 #1A7A74;
+        }
+
+        @media (max-width: 420px) {
+            body { padding: 0; background: #F5F5F7; }
+            .phone-frame {
+                width: 100%; height: 100vh;
+                border-radius: 0; padding: 0;
+                box-shadow: none; background: transparent;
+            }
+            .phone-screen { border-radius: 0; }
+            .dynamic-island, .home-indicator { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="phone-screen">
+            <div class="dynamic-island"></div>
+            
+            <div class="status-bar">
+                <span class="status-time">9:41</span>
+                <div class="status-icons">
+                    <span>📶</span>
+                    <span>📡</span>
+                    <span>🔋</span>
+                </div>
+            </div>
+            
+            <div class="app-content">
+                <a href="/analysis/safety?scan_id={{ scan_id }}" class="back-link">← 안전 분석</a>
+                
+                <div class="header">
+                    <h1><span style="font-size: 1.2em;">📊</span> 1일 권장량 분석</h1>
+                    <p>식약처 기준 섭취량 비교</p>
+                </div>
+                
+                <div class="card">
+                    {% for item in dri_results %}
+                    <div class="nutrient-item">
+                        <div class="nutrient-header">
+                            <span class="icon">
+                                {% if item.status == '적정' %}✅
+                                {% elif item.status == '부족' %}⚠️
+                                {% elif item.status == '과다' %}🔴
+                                {% else %}❓{% endif %}
+                            </span>
+                            <span class="name">{{ item.ingredient }}</span>
+                            <span class="status 
+                                {% if item.status == '적정' %}status-good
+                                {% elif item.status == '부족' %}status-warning
+                                {% elif item.status == '과다' %}status-danger
+                                {% else %}status-unknown{% endif %}">
+                                {{ item.status }}
+                            </span>
+                        </div>
+                        
+                        <div class="nutrient-info">
+                            섭취량: {{ item.amount }}{{ item.unit }}
+                            {% if item.min_recommended %}
+                            <br>권장 범위: {{ item.min_recommended }} ~ {{ item.max_recommended }} {{ item.unit }}
+                            {% else %}
+                            <br><span style="color: #999;">권장량 정보 없음</span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if item.percentage %}
+                        <div class="progress-bar">
+                            <div class="progress-fill 
+                                {% if item.status == '적정' %}progress-good
+                                {% elif item.status == '부족' %}progress-warning
+                                {% else %}progress-danger{% endif %}"
+                                style="width: {{ [item.percentage, 100]|min }}%">
+                            </div>
+                        </div>
+                        <div class="nutrient-detail">
+                            {{ item.status }} ({{ item.percentage }}%)
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <p style="text-align: center; color: #999; padding: 30px;">
+                        분석할 영양 성분이 없습니다
+                    </p>
+                    {% endfor %}
+                </div>
+                
+                <div class="nav-buttons">
+                    <a href="/history" class="btn btn-primary">이력 보기 →</a>
+                </div>
+            </div>
+            
+            <div class="home-indicator"></div>
+        </div>
+    </div>
+</body>
+</html>

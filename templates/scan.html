@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영양제 스캔 - 뉴트리-스캐너</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Noto Sans KR', sans-serif; 
+            background: linear-gradient(135deg, 
+                rgba(173, 216, 230, 0.6) 0%, 
+                rgba(176, 224, 230, 0.5) 25%,
+                rgba(200, 230, 240, 0.4) 50%,
+                rgba(220, 240, 250, 0.5) 75%,
+                rgba(240, 248, 255, 0.6) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 720px;
+            background: #1a1a1a;
+            border-radius: 55px;
+            padding: 12px;
+            box-shadow: 
+                0 30px 60px rgba(0,0,0,0.2),
+                0 0 0 1px #333,
+                inset 0 0 0 1px #2a2a2a;
+            position: relative;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #F5F5F7;
+            border-radius: 45px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .dynamic-island {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 125px;
+            height: 37px;
+            background: #000;
+            border-radius: 25px;
+            z-index: 100;
+        }
+
+        .status-bar {
+            height: 54px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 28px 6px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .status-time { font-weight: 700; font-size: 16px; }
+        .status-icons { display: flex; gap: 6px; font-size: 17px; }
+
+        .app-content {
+            height: calc(100% - 54px - 25px);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .app-content::-webkit-scrollbar { display: none; }
+
+        .home-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 135px;
+            height: 5px;
+            background: #000;
+            border-radius: 5px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #20B2AA 0%, #2E8B7A 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+        .header h1 { font-size: 1.6em; margin-bottom: 8px; font-weight: 700; }
+        .header p { font-size: 0.95em; color: rgba(255,255,255,0.9); }
+
+        .back-link {
+            display: inline-block;
+            padding: 12px 15px;
+            color: #20B2AA;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .card {
+            background: white;
+            margin: 15px;
+            padding: 20px;
+            border-radius: 18px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .scan-area {
+            background: #1a1a1a;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .scan-preview {
+            width: 100%;
+            height: 200px;
+            background: #2a2a2a;
+            border: 3px dashed #20B2AA;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .scan-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .scan-preview .icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .scan-preview p {
+            font-size: 0.9em;
+            color: #1A0033;
+            font-weight: 500;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn-scan {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(180deg, #26C6BC 0%, #20B2AA 50%, #1A9690 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 
+                0 4px 0 #1A7A74,
+                0 6px 15px rgba(32, 178, 170, 0.4);
+            transition: all 0.15s;
+        }
+
+        .btn-scan:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 6px 0 #1A7A74,
+                0 10px 25px rgba(32, 178, 170, 0.5);
+        }
+
+        .btn-scan:active {
+            transform: translateY(2px);
+            box-shadow: 
+                0 2px 0 #1A7A74,
+                0 3px 10px rgba(32, 178, 170, 0.4);
+        }
+
+        .btn-scan:disabled {
+            background: #ccc;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .info-box {
+            background: #FFF8E5;
+            border-left: 4px solid #FFB800;
+            padding: 15px;
+            border-radius: 0 12px 12px 0;
+            margin-bottom: 15px;
+        }
+
+        .info-box p {
+            font-size: 0.9em;
+            color: #1A0033;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        .logo-box {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .logo-box h2 {
+            font-size: 1.3em;
+            color: #20B2AA;
+            margin-bottom: 5px;
+        }
+
+        .logo-box p {
+            font-size: 0.85em;
+            color: #1A0033;
+            font-weight: 500;
+        }
+
+        @media (max-width: 420px) {
+            body { padding: 0; background: #F5F5F7; }
+            .phone-frame {
+                width: 100%; height: 100vh;
+                border-radius: 0; padding: 0;
+                box-shadow: none; background: transparent;
+            }
+            .phone-screen { border-radius: 0; }
+            .dynamic-island, .home-indicator { display: none; }
+            .status-bar { height: 44px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="phone-screen">
+            <div class="dynamic-island"></div>
+            
+            <div class="status-bar">
+                <span class="status-time">9:41</span>
+                <div class="status-icons">
+                    <span>📶</span>
+                    <span>📡</span>
+                    <span>🔋</span>
+                </div>
+            </div>
+            
+            <div class="app-content">
+                <a href="/" class="back-link">← 메인으로</a>
+                
+                <div class="header">
+                    <h1><span style="font-size: 1.2em;">📸</span> 영양제 스캔</h1>
+                    <p>성분표를 촬영하여 분석하세요</p>
+                </div>
+                
+                <div class="card">
+                    <div class="scan-area">
+                        <div class="scan-preview" id="scanPreview">
+                            <div class="icon">📷</div>
+                            <p>촬영된 성분표</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <p>📋 성분표를 프레임 안에 맞춰주세요.<br>AI가 자동으로 성분을 인식합니다.</p>
+                    </div>
+                    
+                    <input type="file" id="imageInput" class="file-input" accept="image/*" capture="environment">
+                    
+                    <button class="btn-scan" id="scanBtn" onclick="document.getElementById('imageInput').click()">
+                        📷 스캔 시작
+                    </button>
+                </div>
+                
+                <div class="logo-box">
+                    <h2><span style="font-size: 1.2em;">🤖</span>💊 NUTRI-SCANNER</h2>
+                    <p>SMART NUTRITION ANALYSIS</p>
+                </div>
+            </div>
+            
+            <div class="home-indicator"></div>
+        </div>
+    </div>
+    
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const scanPreview = document.getElementById('scanPreview');
+        const scanBtn = document.getElementById('scanBtn');
+        
+        imageInput.addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // 미리보기 표시
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                scanPreview.innerHTML = `<img src="${e.target.result}" alt="스캔 이미지">`;
+                // 이미지 데이터 임시 저장
+                window.tempImageData = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            
+            // 파일 임시 저장
+            window.tempFile = file;
+            
+            // 버튼을 "분석 시작"으로 변경
+            scanBtn.textContent = '✅ 이 이미지로 분석하기';
+            scanBtn.disabled = false;
+            scanBtn.onclick = startAnalysis;
+        });
+        
+        async function startAnalysis() {
+            const file = window.tempFile;
+            if (!file) {
+                alert('이미지를 먼저 선택해주세요.');
+                return;
+            }
+            
+            // 버튼 상태 변경
+            scanBtn.textContent = '⏳ 분석 중...';
+            scanBtn.disabled = true;
+            
+            // API 호출
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            try {
+                const response = await fetch('/api/scan', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // localStorage에 결과 저장
+                    localStorage.setItem('scanData', JSON.stringify({
+                        image_url: result.image_url,
+                        ocr_text: result.ocr_text,
+                        ingredients: result.ingredients
+                    }));
+                    
+                    // 확인 페이지로 이동
+                    window.location.href = '/scan/confirm';
+                } else {
+                    alert('❌ 스캔 실패: ' + (result.message || result.error));
+                    scanBtn.textContent = '✅ 이 이미지로 분석하기';
+                    scanBtn.disabled = false;
+                }
+            } catch (error) {
+                alert('❌ 에러: ' + error.message);
+                scanBtn.textContent = '✅ 이 이미지로 분석하기';
+                scanBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

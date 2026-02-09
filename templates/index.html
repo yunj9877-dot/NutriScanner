@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뉴트리-스캐너</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Noto Sans KR', sans-serif; 
+            background: linear-gradient(135deg, 
+                rgba(173, 216, 230, 0.6) 0%, 
+                rgba(176, 224, 230, 0.5) 25%,
+                rgba(200, 230, 240, 0.4) 50%,
+                rgba(220, 240, 250, 0.5) 75%,
+                rgba(240, 248, 255, 0.6) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* 스마트폰 프레임 */
+        .phone-frame {
+            width: 375px;
+            height: 720px;
+            background: #1a1a1a;
+            border-radius: 55px;
+            padding: 12px;
+            box-shadow: 
+                0 30px 60px rgba(0,0,0,0.2),
+                0 0 0 1px #333,
+                inset 0 0 0 1px #2a2a2a,
+                inset 0 2px 10px rgba(255,255,255,0.1);
+            position: relative;
+        }
+
+        /* 사이드 버튼 */
+        .phone-frame::before {
+            content: '';
+            position: absolute;
+            right: -2px;
+            top: 120px;
+            width: 3px;
+            height: 50px;
+            background: linear-gradient(180deg, #2a2a2a, #1a1a1a);
+            border-radius: 0 2px 2px 0;
+        }
+
+        /* 스크린 */
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #F5F5F7;
+            border-radius: 45px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 다이나믹 아일랜드 */
+        .dynamic-island {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 125px;
+            height: 37px;
+            background: #000;
+            border-radius: 25px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 12px;
+        }
+
+        .dynamic-island::before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: radial-gradient(circle, #1a3a1a 0%, #0a1a0a 100%);
+            border-radius: 50%;
+            box-shadow: inset 0 0 2px rgba(0,255,0,0.3);
+        }
+
+        /* 상태바 */
+        .status-bar {
+            height: 54px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 28px 6px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .status-time { font-weight: 700; font-size: 16px; }
+        .status-icons { display: flex; gap: 6px; align-items: center; font-size: 17px; }
+
+        /* 앱 콘텐츠 */
+        .app-content {
+            height: calc(100% - 54px - 25px);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .app-content::-webkit-scrollbar { display: none; }
+
+        /* 홈 인디케이터 */
+        .home-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 135px;
+            height: 5px;
+            background: #000;
+            border-radius: 5px;
+        }
+
+        /* 헤더 - 딥 민트 */
+        .header {
+            background: linear-gradient(135deg, #20B2AA 0%, #2E8B7A 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+        .header h1 { font-size: 1.8em; margin-bottom: 10px; font-weight: 700; }
+        .header p { font-size: 1.05em; opacity: 0.95; }
+
+        /* 환영 카드 */
+        .welcome-card {
+            background: white;
+            margin: 15px;
+            padding: 18px;
+            border-radius: 18px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            position: relative;
+        }
+
+        .welcome-card h2 {
+            font-size: 1.3em;
+            color: #222;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .welcome-card p {
+            font-size: 1em;
+            color: #1A0033;
+            font-weight: 500;
+        }
+
+        .user-name {
+            color: #20B2AA;
+            cursor: pointer;
+            position: relative;
+        }
+
+        /* 프로필 팝업 */
+        .profile-popup {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 15px;
+            right: 15px;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 20px;
+            z-index: 1000;
+            margin-top: 10px;
+            animation: slideUp 0.3s ease;
+        }
+
+        .profile-popup.show { display: block; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .profile-popup h3 {
+            color: #20B2AA;
+            margin-bottom: 15px;
+            font-size: 1em;
+        }
+
+        .profile-item {
+            display: flex;
+            padding: 10px 0;
+            border-bottom: 1px solid #F0F0F0;
+            font-size: 0.9em;
+        }
+
+        .profile-item:last-of-type { border-bottom: none; }
+        .profile-item .label { width: 70px; color: #999; }
+        .profile-item .value { flex: 1; color: #333; font-weight: 500; }
+
+        .disease-tag {
+            display: inline-block;
+            background: #FFE5E5;
+            color: #FF6B6B;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin: 2px;
+        }
+
+        .edit-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(180deg, #26C6BC 0%, #20B2AA 50%, #1A9690 100%);
+            color: white;
+            text-align: center;
+            border-radius: 12px;
+            text-decoration: none;
+            margin-top: 15px;
+            font-weight: 700;
+            font-size: 0.9em;
+            box-shadow: 
+                0 3px 0 #1A7A74,
+                0 5px 12px rgba(32, 178, 170, 0.3);
+            transition: all 0.15s;
+        }
+        
+        .edit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 5px 0 #1A7A74,
+                0 8px 18px rgba(32, 178, 170, 0.4);
+        }
+        
+        .edit-btn:active {
+            transform: translateY(2px);
+            box-shadow: 
+                0 1px 0 #1A7A74,
+                0 2px 8px rgba(32, 178, 170, 0.3);
+        }
+        
+        .profile-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .profile-buttons .edit-btn,
+        .profile-buttons .new-user-btn {
+            flex: 1;
+            margin-top: 0;
+            padding: 10px 8px;
+            font-size: 0.85em;
+        }
+        
+        .new-user-btn {
+            display: block;
+            padding: 12px;
+            background: linear-gradient(180deg, #6B8DD6 0%, #5A7BC0 50%, #4A6BAA 100%);
+            color: white;
+            text-align: center;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9em;
+            box-shadow: 
+                0 3px 0 #3A5B9A,
+                0 5px 12px rgba(90, 123, 192, 0.3);
+            transition: all 0.15s;
+        }
+        
+        .new-user-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 5px 0 #3A5B9A,
+                0 8px 18px rgba(90, 123, 192, 0.4);
+        }
+        
+        .new-user-btn:active {
+            transform: translateY(2px);
+            box-shadow: 
+                0 1px 0 #3A5B9A,
+                0 2px 8px rgba(90, 123, 192, 0.3);
+        }
+        
+        /* 사용자 전환 섹션 스타일 (v13 NEW!) */
+        .user-switch-section {
+            margin-top: 15px;
+            border-top: 1px solid #eee;
+            padding-top: 12px;
+        }
+        
+        .switch-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 8px 0;
+            color: #666;
+            font-size: 0.85em;
+        }
+        
+        .switch-header:hover {
+            color: #20B2AA;
+        }
+        
+        .switch-arrow {
+            font-size: 0.7em;
+            transition: transform 0.2s;
+        }
+        
+        .switch-arrow.open {
+            transform: rotate(180deg);
+        }
+        
+        .user-list {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 8px;
+        }
+        
+        .user-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .user-list-item:hover {
+            background: #e8f5f4;
+        }
+        
+        .user-list-item.current {
+            background: #d4f0ee;
+            border: 1px solid #20B2AA;
+        }
+        
+        .user-list-item .user-info {
+            font-size: 0.85em;
+        }
+        
+        .user-list-item .user-name {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .user-list-item .user-detail {
+            font-size: 0.75em;
+            color: #888;
+        }
+        
+        .user-list-item .select-btn {
+            font-size: 0.75em;
+            padding: 4px 10px;
+            background: #20B2AA;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+        
+        .user-list-item.current .select-btn {
+            background: #999;
+        }
+
+        /* 메뉴 그리드 */
+        .menu {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 0 15px 20px;
+        }
+
+        .menu-item {
+            background: linear-gradient(180deg, #FFFFFF 0%, #F8F8F8 100%);
+            padding: 22px 15px;
+            border-radius: 18px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s;
+            box-shadow: 
+                0 4px 0 #E0E0E0,
+                0 6px 15px rgba(0,0,0,0.08);
+            text-decoration: none;
+            border: 1px solid #F0F0F0;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 7px 0 #E0E0E0,
+                0 12px 25px rgba(0,0,0,0.12);
+        }
+
+        .menu-item:active {
+            transform: translateY(2px);
+            box-shadow: 
+                0 2px 0 #E0E0E0,
+                0 3px 10px rgba(0,0,0,0.08);
+        }
+
+        .menu-item .icon {
+            font-size: 2.8em;
+            margin-bottom: 12px;
+        }
+
+        .menu-item h3 {
+            font-size: 1.1em;
+            color: #222;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .menu-item p {
+            font-size: 0.9em;
+            color: #1A0033;
+            font-weight: 500;
+        }
+
+        /* 시작하기 카드 */
+        .start-card {
+            background: white;
+            margin: 15px;
+            padding: 30px 20px;
+            border-radius: 18px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .start-card h2 {
+            font-size: 1.4em;
+            margin-bottom: 12px;
+            color: #222;
+            font-weight: 600;
+        }
+
+        .start-card p {
+            color: #1A0033;
+            margin-bottom: 20px;
+            font-size: 1.05em;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            padding: 15px 35px;
+            background: linear-gradient(180deg, #26C6BC 0%, #20B2AA 50%, #1A9690 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1em;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 
+                0 4px 0 #1A7A74,
+                0 6px 15px rgba(32, 178, 170, 0.4);
+            transition: all 0.15s;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 6px 0 #1A7A74,
+                0 10px 25px rgba(32, 178, 170, 0.5);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(2px);
+            box-shadow: 
+                0 2px 0 #1A7A74,
+                0 3px 10px rgba(32, 178, 170, 0.4);
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 999;
+        }
+
+        .overlay.show { display: block; }
+
+        /* 반응형 */
+        @media (max-width: 420px) {
+            body { padding: 0; background: #F5F5F7; }
+            .phone-frame {
+                width: 100%; height: 100vh;
+                border-radius: 0; padding: 0;
+                box-shadow: none; background: transparent;
+            }
+            .phone-screen { border-radius: 0; }
+            .dynamic-island, .home-indicator { display: none; }
+            .status-bar { height: 44px; padding-top: 5px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="phone-screen">
+            <div class="dynamic-island"></div>
+            
+            <div class="status-bar">
+                <span class="status-time">9:41</span>
+                <div class="status-icons">
+                    <span>📶</span>
+                    <span>📡</span>
+                    <span>🔋</span>
+                </div>
+            </div>
+            
+            <div class="app-content">
+                <div class="header">
+                    <h1><span style="font-size: 1.3em;">🤖</span>💊 뉴트리-스캐너</h1>
+                    <p>안전한 영양제 관리 시스템</p>
+                </div>
+                
+                {% if user %}
+                <div class="welcome-card">
+                    <h2>
+                        안녕하세요, 
+                        <span class="user-name" onclick="toggleProfile()">{{ user.name }}님</span>! <span style="font-size: 1.2em;">😊</span>
+                    </h2>
+                    <p>오늘도 건강한 하루 되세요!</p>
+                    
+                    <div class="profile-popup" id="profilePopup">
+                        <h3>👤 내 프로필</h3>
+                        <div class="profile-item">
+                            <span class="label">이름</span>
+                            <span class="value">{{ user.name }}</span>
+                        </div>
+                        <div class="profile-item">
+                            <span class="label">나이</span>
+                            <span class="value">{{ user.age }}세</span>
+                        </div>
+                        <div class="profile-item">
+                            <span class="label">성별</span>
+                            <span class="value">{{ user.gender or '미설정' }}</span>
+                        </div>
+                        <div class="profile-item">
+                            <span class="label">기저질환</span>
+                            <span class="value">
+                                {% if user.diseases and user.diseases|length > 0 %}
+                                    {% for disease in user.diseases %}
+                                    <span class="disease-tag">{{ disease }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    없음
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="profile-buttons">
+                            <a href="/profile?user_id={{ user.id }}" class="edit-btn">✏️ 프로필 수정</a>
+                            <a href="/profile?new=1" class="new-user-btn">👤 새 사용자</a>
+                        </div>
+                        
+                        <!-- 사용자 전환 섹션 (v13 NEW!) -->
+                        <div class="user-switch-section" id="userSwitchSection">
+                            <div class="switch-header" onclick="toggleUserList()">
+                                <span>🔄 다른 사용자로 전환</span>
+                                <span class="switch-arrow" id="switchArrow">▼</span>
+                            </div>
+                            <div class="user-list" id="userList" style="display: none;">
+                                <!-- 동적으로 채워짐 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="menu">
+                    <a href="/scan" class="menu-item">
+                        <div class="icon">📸</div>
+                        <h3>영양제 스캔</h3>
+                        <p>사진으로 성분 분석</p>
+                    </a>
+                    
+                    <a href="/history" class="menu-item">
+                        <div class="icon">📋</div>
+                        <h3>스캔 이력</h3>
+                        <p>내 영양제 기록</p>
+                    </a>
+                    
+                    <a href="/report" class="menu-item">
+                        <div class="icon">📊</div>
+                        <h3>월간 리포트</h3>
+                        <p>한 달 통계</p>
+                    </a>
+                    
+                    <a href="/profile" class="menu-item">
+                        <div class="icon">👤</div>
+                        <h3>프로필 설정</h3>
+                        <p>새 사용자 등록</p>
+                    </a>
+                    
+                    <a href="/settings" class="menu-item" style="grid-column: span 2;">
+                        <div class="icon">⚙️</div>
+                        <h3>알림 및 설정</h3>
+                        <p>알림, 보호자, 기관 연동</p>
+                    </a>
+                </div>
+                {% else %}
+                <div class="start-card">
+                    <h2>환영합니다! <span style="font-size: 1.3em;">👋</span></h2>
+                    <p>먼저 프로필을 설정해주세요</p>
+                    <a href="/profile" class="btn-primary">프로필 설정하기</a>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="home-indicator"></div>
+        </div>
+    </div>
+    
+    <div class="overlay" id="overlay" onclick="toggleProfile()"></div>
+    
+    <script>
+        const currentUserId = {{ user.id if user else 'null' }};
+        let allUsers = [];
+        
+        function toggleProfile() {
+            const popup = document.getElementById('profilePopup');
+            const overlay = document.getElementById('overlay');
+            popup.classList.toggle('show');
+            overlay.classList.toggle('show');
+        }
+        
+        // 사용자 목록 토글 (v13 NEW!)
+        async function toggleUserList() {
+            const userList = document.getElementById('userList');
+            const arrow = document.getElementById('switchArrow');
+            
+            if (userList.style.display === 'none') {
+                // 사용자 목록 불러오기
+                await loadUserList();
+                userList.style.display = 'block';
+                arrow.classList.add('open');
+            } else {
+                userList.style.display = 'none';
+                arrow.classList.remove('open');
+            }
+        }
+        
+        // 모든 사용자 목록 불러오기
+        async function loadUserList() {
+            try {
+                const response = await fetch('/api/users/all');
+                const result = await response.json();
+                
+                if (result.success && result.users) {
+                    allUsers = result.users;
+                    renderUserList();
+                }
+            } catch (error) {
+                console.log('사용자 목록 로드 실패:', error);
+            }
+        }
+        
+        // 사용자 목록 렌더링
+        function renderUserList() {
+            const userList = document.getElementById('userList');
+            
+            if (allUsers.length === 0) {
+                userList.innerHTML = '<div style="padding: 10px; text-align: center; color: #999; font-size: 0.85em;">등록된 사용자가 없습니다</div>';
+                return;
+            }
+            
+            let html = '';
+            allUsers.forEach(user => {
+                const isCurrent = user.id === currentUserId;
+                const diseases = user.diseases && user.diseases.length > 0 
+                    ? user.diseases.slice(0, 2).join(', ') + (user.diseases.length > 2 ? ' 외' : '')
+                    : '없음';
+                
+                html += `
+                    <div class="user-list-item ${isCurrent ? 'current' : ''}" onclick="${isCurrent ? '' : 'switchUser(' + user.id + ')'}">
+                        <div class="user-info">
+                            <div class="user-name">${user.name} (${user.age}세, ${user.gender || '미설정'})</div>
+                            <div class="user-detail">기저질환: ${diseases}</div>
+                        </div>
+                        <button class="select-btn">${isCurrent ? '현재' : '선택'}</button>
+                    </div>
+                `;
+            });
+            
+            userList.innerHTML = html;
+        }
+        
+        // 사용자 전환
+        async function switchUser(userId) {
+            try {
+                const response = await fetch('/api/user/switch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // 페이지 새로고침하여 새 사용자 정보 반영
+                    window.location.reload();
+                } else {
+                    alert('전환 실패: ' + result.message);
+                }
+            } catch (error) {
+                alert('오류: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

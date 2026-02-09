@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스캔 이력 - 뉴트리-스캐너</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Noto Sans KR', sans-serif; 
+            background: linear-gradient(135deg, 
+                rgba(173, 216, 230, 0.6) 0%, 
+                rgba(200, 230, 240, 0.4) 50%,
+                rgba(240, 248, 255, 0.6) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 720px;
+            background: #1a1a1a;
+            border-radius: 55px;
+            padding: 12px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #F5F5F7;
+            border-radius: 45px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .dynamic-island {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 125px;
+            height: 37px;
+            background: #000;
+            border-radius: 25px;
+            z-index: 100;
+        }
+
+        .status-bar {
+            height: 54px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 28px 6px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .status-time { font-weight: 700; font-size: 16px; }
+        .status-icons { display: flex; gap: 6px; font-size: 17px; }
+
+        .app-content {
+            height: calc(100% - 54px - 25px);
+            overflow-y: auto;
+        }
+
+        .app-content::-webkit-scrollbar { display: none; }
+
+        .home-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 135px;
+            height: 5px;
+            background: #000;
+            border-radius: 5px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #20B2AA 0%, #2E8B7A 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+        .header h1 { font-size: 1.5em; margin-bottom: 8px; }
+        .header p { font-size: 0.9em; opacity: 0.9; }
+
+        .back-link {
+            display: inline-block;
+            padding: 12px 15px;
+            color: #20B2AA;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .history-list {
+            padding: 15px;
+        }
+
+        .history-item {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .history-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .status-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .status-dot.safe { background: #4CAF50; }
+        .status-dot.warning { background: #FF9800; }
+        .status-dot.danger { background: #F44336; }
+
+        .history-info { flex: 1; }
+
+        .history-name {
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 3px;
+        }
+
+        .history-meta {
+            font-size: 0.8em;
+            color: #1A0033;
+            font-weight: 500;
+        }
+
+        .history-tag {
+            font-size: 0.75em;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .tag-safe { background: #E8F5E9; color: #2E7D32; }
+        .tag-warning { background: #FFF8E1; color: #F57C00; }
+        .tag-danger { background: #FFEBEE; color: #C62828; }
+
+        .history-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-view-ingredients {
+            background: #20B2AA;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.75em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-view-ingredients:hover {
+            background: #1A9090;
+            transform: scale(1.05);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #666;
+        }
+
+        .empty-state .icon { font-size: 3em; margin-bottom: 15px; }
+        .empty-state p { margin-bottom: 15px; color: #1A0033; }
+
+        .empty-state a {
+            color: #20B2AA;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        @media (max-width: 420px) {
+            body { padding: 0; background: #F5F5F7; }
+            .phone-frame {
+                width: 100%; height: 100vh;
+                border-radius: 0; padding: 0;
+                box-shadow: none; background: transparent;
+            }
+            .phone-screen { border-radius: 0; }
+            .dynamic-island, .home-indicator { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="phone-screen">
+            <div class="dynamic-island"></div>
+            
+            <div class="status-bar">
+                <span class="status-time">9:41</span>
+                <div class="status-icons">
+                    <span>📶</span>
+                    <span>📡</span>
+                    <span>🔋</span>
+                </div>
+            </div>
+            
+            <div class="app-content">
+                <a href="{% if selected_date %}/report{% else %}/{% endif %}" class="back-link">← {% if selected_date %}리포트로{% else %}메인으로{% endif %}</a>
+                
+                <div class="header">
+                    <h1><span style="font-size: 1.2em;">📋</span> 스캔 이력</h1>
+                    <p>{% if selected_date %}{{ selected_date }} 스캔 기록{% else %}내 영양제 스캔 기록{% endif %}</p>
+                </div>
+                
+                <div class="history-list">
+                    {% if history %}
+                        {% for scan in history %}
+                        <div class="history-item">
+                            <div class="status-dot {% if scan.safety_result.overall_risk == 'danger' %}danger{% elif scan.safety_result.overall_risk == 'warning' %}warning{% else %}safe{% endif %}"></div>
+                            <div class="history-info" onclick="location.href='/analysis/safety?scan_id={{ scan.id }}'">
+                                <div class="history-name">{{ scan.product_name or '영양제' }}</div>
+                                <div class="history-meta">{{ scan.scan_date[:10] }} · {{ scan.ingredients|length }}개 성분</div>
+                            </div>
+                            <div class="history-actions">
+                                <button class="btn-view-ingredients" onclick="event.stopPropagation(); location.href='/scan/view?scan_id={{ scan.id }}'">성분</button>
+                                <span class="history-tag {% if scan.safety_result.overall_risk == 'danger' %}tag-danger{% elif scan.safety_result.overall_risk == 'warning' %}tag-warning{% else %}tag-safe{% endif %}">
+                                    {% if scan.safety_result.overall_risk == 'danger' %}위험
+                                    {% elif scan.safety_result.overall_risk == 'warning' %}주의
+                                    {% else %}안전{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="icon">📭</div>
+                            <p>{% if selected_date %}{{ selected_date }}에 스캔 이력이 없습니다{% else %}스캔 이력이 없습니다{% endif %}</p>
+                            <a href="/scan">스캔 시작하기 →</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="home-indicator"></div>
+        </div>
+    </div>
+</body>
+</html>

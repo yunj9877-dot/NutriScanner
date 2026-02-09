@@ -1,0 +1,312 @@
+/* 
+ * 뉴트리-스캐너 스마트폰 프레임 스타일
+ * 실제 아이폰 느낌의 디자인
+ */
+
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+}
+
+body { 
+    font-family: 'Noto Sans KR', sans-serif; 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* 스마트폰 프레임 */
+.phone-frame {
+    width: 375px;
+    height: 812px;
+    background: #000;
+    border-radius: 50px;
+    padding: 12px;
+    box-shadow: 
+        0 50px 100px rgba(0,0,0,0.4),
+        0 0 0 2px #333,
+        inset 0 0 0 2px #1a1a1a;
+    position: relative;
+}
+
+/* 사이드 버튼들 */
+.phone-frame::before {
+    content: '';
+    position: absolute;
+    right: -3px;
+    top: 120px;
+    width: 4px;
+    height: 60px;
+    background: #333;
+    border-radius: 0 2px 2px 0;
+}
+
+.phone-frame::after {
+    content: '';
+    position: absolute;
+    left: -3px;
+    top: 100px;
+    width: 4px;
+    height: 30px;
+    background: #333;
+    border-radius: 2px 0 0 2px;
+    box-shadow: 0 50px 0 #333, 0 90px 0 #333;
+}
+
+/* 스크린 영역 */
+.phone-screen {
+    width: 100%;
+    height: 100%;
+    background: #F7F9FC;
+    border-radius: 40px;
+    overflow: hidden;
+    position: relative;
+}
+
+/* 상단 노치 (다이나믹 아일랜드) */
+.phone-notch {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 35px;
+    background: #000;
+    border-radius: 20px;
+    z-index: 100;
+}
+
+/* 상태바 */
+.phone-status-bar {
+    height: 50px;
+    background: transparent;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 25px 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #000;
+}
+
+.status-time {
+    font-weight: 700;
+}
+
+.status-icons {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.status-icons span {
+    font-size: 16px;
+}
+
+/* 앱 콘텐츠 영역 */
+.app-content {
+    height: calc(100% - 50px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 20px;
+}
+
+/* 스크롤바 숨기기 */
+.app-content::-webkit-scrollbar {
+    width: 0;
+    display: none;
+}
+
+/* 컨테이너 */
+.container {
+    padding: 15px;
+}
+
+/* 헤더 */
+.header {
+    background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+    color: white;
+    padding: 20px 15px;
+    text-align: center;
+    margin: 0;
+    border-radius: 0;
+}
+
+.header h1 {
+    font-size: 1.2em;
+    margin-bottom: 5px;
+}
+
+.header p {
+    font-size: 0.8em;
+    opacity: 0.9;
+}
+
+/* 카드 */
+.card {
+    background: white;
+    border-radius: 15px;
+    padding: 15px;
+    margin: 10px 15px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+/* 버튼 */
+.btn {
+    display: inline-block;
+    padding: 14px 28px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    text-align: center;
+}
+
+.btn-primary {
+    background: #4ECDC4;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #44A08D;
+    transform: scale(1.02);
+}
+
+/* 뒤로가기 */
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 15px;
+    color: #4ECDC4;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+/* 홈 인디케이터 */
+.home-indicator {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 135px;
+    height: 5px;
+    background: #000;
+    border-radius: 3px;
+}
+
+/* 메뉴 그리드 */
+.menu {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 0 15px;
+}
+
+.menu-item {
+    background: white;
+    padding: 20px 15px;
+    border-radius: 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+.menu-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+}
+
+.menu-item .icon {
+    font-size: 2em;
+    margin-bottom: 8px;
+}
+
+.menu-item h3 {
+    font-size: 0.95em;
+    color: #333;
+    margin-bottom: 3px;
+}
+
+.menu-item p {
+    font-size: 0.75em;
+    color: #999;
+}
+
+/* 폼 요소 */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+    font-size: 0.9em;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #E8E8E8;
+    border-radius: 12px;
+    font-size: 1em;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #4ECDC4;
+}
+
+/* 반응형 */
+@media (max-height: 850px) {
+    .phone-frame {
+        height: 90vh;
+        max-height: 812px;
+    }
+}
+
+@media (max-width: 420px) {
+    body {
+        padding: 0;
+        background: #F7F9FC;
+    }
+    
+    .phone-frame {
+        width: 100%;
+        height: 100vh;
+        border-radius: 0;
+        padding: 0;
+        box-shadow: none;
+    }
+    
+    .phone-screen {
+        border-radius: 0;
+    }
+    
+    .phone-notch,
+    .home-indicator {
+        display: none;
+    }
+    
+    .phone-status-bar {
+        display: none;
+    }
+    
+    .app-content {
+        height: 100%;
+    }
+}

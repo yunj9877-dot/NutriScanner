@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>월간 리포트 - 뉴트리-스캐너</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Noto Sans KR', sans-serif; 
+            background: linear-gradient(135deg, 
+                rgba(173, 216, 230, 0.6) 0%, 
+                rgba(200, 230, 240, 0.4) 50%,
+                rgba(240, 248, 255, 0.6) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 720px;
+            background: #1a1a1a;
+            border-radius: 55px;
+            padding: 12px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #F5F5F7;
+            border-radius: 45px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .dynamic-island {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 125px;
+            height: 37px;
+            background: #000;
+            border-radius: 25px;
+            z-index: 100;
+        }
+
+        .status-bar {
+            height: 54px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 28px 6px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .status-time { font-weight: 700; font-size: 16px; }
+        .status-icons { display: flex; gap: 6px; font-size: 17px; }
+
+        .app-content {
+            height: calc(100% - 54px - 25px);
+            overflow-y: auto;
+        }
+
+        .app-content::-webkit-scrollbar { display: none; }
+
+        .home-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 135px;
+            height: 5px;
+            background: #000;
+            border-radius: 5px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #20B2AA 0%, #2E8B7A 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+        .header h1 { font-size: 1.5em; margin-bottom: 8px; }
+        .header p { font-size: 0.9em; opacity: 0.9; }
+
+        .back-link {
+            display: inline-block;
+            padding: 12px 15px;
+            color: #20B2AA;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .card {
+            background: white;
+            margin: 15px;
+            padding: 18px;
+            border-radius: 18px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .card-title {
+            font-size: 1em;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 15px;
+        }
+
+        /* 요약 박스 */
+        .summary-box {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .summary-item {
+            text-align: center;
+            padding: 12px;
+            background: #F8F9FA;
+            border-radius: 12px;
+        }
+
+        .summary-item .value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #20B2AA;
+        }
+
+        .summary-item .label {
+            font-size: 0.75em;
+            color: #1A0033;
+            font-weight: 500;
+        }
+
+        /* 신호등 요약 */
+        .signal-summary {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 10px 0;
+        }
+
+        .signal-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .signal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .signal-dot.red { background: #F44336; }
+        .signal-dot.yellow { background: #FF9800; }
+        .signal-dot.green { background: #4CAF50; }
+
+        /* 캘린더 */
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .calendar-header {
+            text-align: center;
+            font-size: 0.75em;
+            font-weight: 600;
+            color: #666;
+            padding: 5px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85em;
+            border-radius: 8px;
+            position: relative;
+            cursor: default;
+        }
+
+        .calendar-day.empty { background: transparent; }
+        .calendar-day.today { background: #E3F2FD; font-weight: 700; }
+        
+        /* 스캔 있는 날 - 클릭 가능 */
+        .calendar-day.has-scan {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .calendar-day.has-scan:hover {
+            transform: scale(1.1);
+        }
+        
+        .calendar-day.has-scan::after {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #20B2AA;
+            border-radius: 50%;
+            position: absolute;
+            bottom: 4px;
+        }
+        
+        /* 스캔 결과별 색상 */
+        .calendar-day.scan-safe {
+            background: #E8F5E9;
+        }
+        .calendar-day.scan-warning {
+            background: #FFF8E1;
+        }
+        .calendar-day.scan-danger {
+            background: #FFEBEE;
+        }
+
+        /* 이번 달 요약 */
+        .month-summary {
+            background: #E3F2FD;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .month-summary h4 {
+            font-size: 0.95em;
+            color: #1565C0;
+            margin-bottom: 12px;
+        }
+
+        .summary-list {
+            font-size: 0.85em;
+            color: #1A0033;
+        }
+
+        .summary-list li {
+            margin-bottom: 6px;
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .summary-list .highlight {
+            font-weight: 600;
+        }
+
+        .summary-list .danger { color: #D32F2F; }
+        .summary-list .warning { color: #F57C00; }
+        .summary-list .safe { color: #388E3C; }
+
+        @media (max-width: 420px) {
+            body { padding: 0; background: #F5F5F7; }
+            .phone-frame {
+                width: 100%; height: 100vh;
+                border-radius: 0; padding: 0;
+                box-shadow: none; background: transparent;
+            }
+            .phone-screen { border-radius: 0; }
+            .dynamic-island, .home-indicator { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="phone-screen">
+            <div class="dynamic-island"></div>
+            
+            <div class="status-bar">
+                <span class="status-time">9:41</span>
+                <div class="status-icons">
+                    <span>📶</span>
+                    <span>📡</span>
+                    <span>🔋</span>
+                </div>
+            </div>
+            
+            <div class="app-content">
+                <a href="/" class="back-link">← 메인으로</a>
+                
+                <div class="header">
+                    <h1><span style="font-size: 1.2em;">📊</span> 월간 리포트</h1>
+                    <p>이번 달 영양제 분석 요약</p>
+                </div>
+                
+                <!-- 요약 -->
+                <div class="card">
+                    <div class="summary-box">
+                        <div class="summary-item">
+                            <div class="value">{{ total_scans }}</div>
+                            <div class="label">총 스캔</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="value">{{ scan_days }}</div>
+                            <div class="label">스캔 일수</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="value">{{ total_ingredients }}</div>
+                            <div class="label">분석 성분</div>
+                        </div>
+                    </div>
+                    
+                    <div class="signal-summary">
+                        <div class="signal-item">
+                            <div class="signal-dot red"></div>
+                            <span>{{ danger_count }}</span>
+                        </div>
+                        <div class="signal-item">
+                            <div class="signal-dot yellow"></div>
+                            <span>{{ warning_count }}</span>
+                        </div>
+                        <div class="signal-item">
+                            <div class="signal-dot green"></div>
+                            <span>{{ safe_count }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 캘린더 -->
+                <div class="card">
+                    <div class="card-title">📅 {{ current_year }}년 {{ current_month }}월 스캔 달력</div>
+                    <div class="calendar">
+                        <div class="calendar-header">일</div>
+                        <div class="calendar-header">월</div>
+                        <div class="calendar-header">화</div>
+                        <div class="calendar-header">수</div>
+                        <div class="calendar-header">목</div>
+                        <div class="calendar-header">금</div>
+                        <div class="calendar-header">토</div>
+                        
+                        {% for day in calendar_days %}
+                        <div class="calendar-day 
+                            {% if day.is_empty %}empty{% endif %} 
+                            {% if day.is_today %}today{% endif %} 
+                            {% if day.has_scan %}has-scan{% endif %}
+                            {% if day.risk == 'danger' %}scan-danger{% elif day.risk == 'warning' %}scan-warning{% elif day.risk == 'safe' %}scan-safe{% endif %}"
+                            {% if day.has_scan %}onclick="location.href='/history?date={{ day.date_str }}'"{% endif %}>
+                            {{ day.day if not day.is_empty else '' }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- 이번 달 요약 -->
+                <div class="card">
+                    <div class="month-summary">
+                        <h4>📋 이번 달 요약</h4>
+                        <ul class="summary-list">
+                            <li>• 총 {{ current_month }}월 스캔: <span class="highlight">{{ total_scans }}회</span></li>
+                            {% if danger_dates %}
+                            <li>• <span class="danger">위험 발생</span>: {{ danger_dates|length }}일 ({{ danger_dates|join(', ') }})</li>
+                            {% else %}
+                            <li>• <span class="danger">위험 발생</span>: 0일</li>
+                            {% endif %}
+                            {% if warning_dates %}
+                            <li>• <span class="warning">주의 발생</span>: {{ warning_dates|length }}일 ({{ warning_dates|join(', ') }})</li>
+                            {% else %}
+                            <li>• <span class="warning">주의 발생</span>: 0일</li>
+                            {% endif %}
+                            <li>• <span class="safe">안전 비율</span>: {{ safe_percent }}% ({{ safe_count }}/{{ total_scans }}회)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="home-indicator"></div>
+        </div>
+    </div>
+</body>
+</html>

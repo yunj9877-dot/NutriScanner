@@ -1,0 +1,143 @@
+/* 
+ * 뉴트리-스캐너 공통 스타일
+ * 모든 화면 가로 너비: 415px (약 11cm)
+ */
+
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+}
+
+body { 
+    font-family: 'Noto Sans KR', sans-serif; 
+    background: #E8E8E8;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+}
+
+/* 앱 컨테이너 - 고정 너비 */
+.app-container {
+    width: 415px;
+    max-width: 415px;
+    min-width: 415px;
+    min-height: 100vh;
+    background: #F7F9FC;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    position: relative;
+}
+
+/* 기존 container 클래스도 동일하게 */
+.container {
+    width: 100%;
+    max-width: 415px;
+    padding: 15px;
+    margin: 0 auto;
+}
+
+/* 헤더 */
+.header {
+    background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+    color: white;
+    padding: 20px 15px;
+    text-align: center;
+    border-radius: 0 0 15px 15px;
+    margin-bottom: 15px;
+}
+
+.header h1 {
+    font-size: 1.3em;
+    margin-bottom: 5px;
+}
+
+.header p {
+    font-size: 0.85em;
+    opacity: 0.9;
+}
+
+/* 카드 */
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* 버튼 */
+.btn {
+    display: inline-block;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    text-align: center;
+}
+
+.btn-primary {
+    background: #4ECDC4;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #44A08D;
+}
+
+.btn-secondary {
+    background: #E0E0E0;
+    color: #333;
+}
+
+/* 뒤로가기 링크 */
+.back-link {
+    display: inline-block;
+    padding: 10px 15px;
+    color: #4ECDC4;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9em;
+}
+
+/* 폼 요소 */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+    font-size: 0.95em;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #E0E0E0;
+    border-radius: 10px;
+    font-size: 1em;
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #4ECDC4;
+}
+
+/* 반응형 - 작은 화면에서는 전체 너비 사용 */
+@media (max-width: 430px) {
+    .app-container {
+        width: 100%;
+        max-width: 100%;
+        min-width: 100%;
+        box-shadow: none;
+    }
+}

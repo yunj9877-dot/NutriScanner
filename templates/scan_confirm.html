@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스마트 성분표 스캔 - 뉴트리-스캐너</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Noto Sans KR', sans-serif; 
+            background: linear-gradient(135deg, 
+                rgba(173, 216, 230, 0.6) 0%, 
+                rgba(176, 224, 230, 0.5) 25%,
+                rgba(200, 230, 240, 0.4) 50%,
+                rgba(220, 240, 250, 0.5) 75%,
+                rgba(240, 248, 255, 0.6) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 720px;
+            background: #1a1a1a;
+            border-radius: 55px;
+            padding: 12px;
+            box-shadow: 
+                0 30px 60px rgba(0,0,0,0.2),
+                0 0 0 1px #333,
+                inset 0 0 0 1px #2a2a2a;
+            position: relative;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #F5F5F7;
+            border-radius: 45px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .dynamic-island {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 125px;
+            height: 37px;
+            background: #000;
+            border-radius: 25px;
+            z-index: 100;
+        }
+
+        .status-bar {
+            height: 54px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 28px 6px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .status-time { font-weight: 700; font-size: 16px; }
+        .status-icons { display: flex; gap: 6px; font-size: 17px; }
+
+        .app-content {
+            height: calc(100% - 54px - 25px);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .app-content::-webkit-scrollbar { display: none; }
+
+        .home-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 135px;
+            height: 5px;
+            background: #000;
+            border-radius: 5px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #20B2AA 0%, #2E8B7A 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+        .header h1 { font-size: 1.5em; margin-bottom: 8px; font-weight: 700; }
+        .header p { font-size: 0.9em; color: rgba(255,255,255,0.9); }
+
+        .back-link {
+            display: inline-block;
+            padding: 12px 15px;
+            color: #20B2AA;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .card-title {
+            font-size: 1em;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 12px;
+        }
+
+        .scan-image-box {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+            max-height: 200px;
+            overflow: hidden;
+        }
+
+        .scan-image-box img {
+            max-width: 100%;
+            max-height: 180px;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .scan-summary {
+            background: #FFF8E5;
+            margin: 15px;
+            padding: 15px;
+            border-radius: 15px;
+            border-left: 4px solid #FFB800;
+        }
+
+        .scan-summary h3 {
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 1em;
+        }
+
+        .scan-summary p {
+            color: #1A0033;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .card {
+            background: white;
+            margin: 0 15px 15px;
+            padding: 15px;
+            border-radius: 18px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .ingredients-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .ingredients-header h2 { font-size: 1.05em; color: #222; }
+
+        .btn-add {
+            background: linear-gradient(180deg, #26C6BC 0%, #20B2AA 100%);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85em;
+            box-shadow: 0 2px 0 #1A7A74;
+        }
+
+        .ingredient-item {
+            background: #F8F9FA;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+            border-left: 4px solid #20B2AA;
+        }
+
+        .ingredient-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .ingredient-info { flex: 1; }
+
+        .ingredient-name {
+            font-weight: 700;
+            font-size: 1.05em;
+            color: #222;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ingredient-amount {
+            color: #20B2AA;
+            font-weight: 600;
+            font-size: 0.95em;
+            margin-top: 4px;
+        }
+
+        .ingredient-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            font-size: 1.1em;
+            cursor: pointer;
+            padding: 5px;
+            opacity: 0.6;
+        }
+
+        .btn-icon:hover { opacity: 1; }
+
+        .ingredient-edit {
+            display: none;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #E0E0E0;
+        }
+
+        .ingredient-item.editing .ingredient-edit { display: block; }
+
+        .edit-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .edit-row input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #E0E0E0;
+            border-radius: 8px;
+            font-size: 0.95em;
+        }
+
+        .edit-row input:focus {
+            outline: none;
+            border-color: #20B2AA;
+        }
+
+        .btn-save {
+            background: #20B2AA;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .tts-button {
+            width: calc(100% - 30px);
+            margin: 0 15px 10px;
+            padding: 16px;
+            background: linear-gradient(180deg, #5BD85B 0%, #4CAF50 50%, #43A047 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.05em;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 
+                0 4px 0 #2E7D32,
+                0 6px 15px rgba(76, 175, 80, 0.4);
+            transition: all 0.15s;
+        }
+
+        .tts-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .tts-button.speaking {
+            background: linear-gradient(180deg, #FF7070 0%, #FF5252 100%);
+            box-shadow: 0 4px 0 #C62828, 0 6px 15px rgba(255, 82, 82, 0.4);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            padding: 0 15px 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(180deg, #F5F5F5 0%, #E0E0E0 100%);
+            color: #333;
+            box-shadow: 0 3px 0 #BDBDBD;
+        }
+
+        .btn-primary {
+            background: linear-gradient(180deg, #26C6BC 0%, #20B2AA 50%, #1A9690 100%);
+            color: white;
+            box-shadow: 0 4px 0 #1A7A74;
+        }
+
+        @media (max-width: 420px) {
+            body { padding: 0; background: #F5F5F7; }
+            .phone-frame {
+                width: 100%; height: 100vh;
+                border-radius: 0; padding: 0;
+                box-shadow: none; background: transparent;
+            }
+            .phone-screen { border-radius: 0; }
+            .dynamic-island, .home-indicator { display: none; }
+            .status-bar { height: 44px; }
+        }
+        /* 성분 추가 모달 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            width: 320px;
+            max-width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .modal-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .modal-field {
+            margin-bottom: 15px;
+        }
+        .modal-field label {
+            display: block;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 6px;
+        }
+        .modal-field input,
+        .modal-field select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #E0E0E0;
+            border-radius: 10px;
+            font-size: 1em;
+            font-family: inherit;
+        }
+        .modal-field input:focus,
+        .modal-field select:focus {
+            outline: none;
+            border-color: #20B2AA;
+        }
+        .modal-row {
+            display: flex;
+            gap: 10px;
+        }
+        .modal-row .modal-field:first-child { flex: 2; }
+        .modal-row .modal-field:last-child { flex: 1; }
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .modal-btn-cancel {
+            background: #E0E0E0;
+            color: #555;
+        }
+        .modal-btn-confirm {
+            background: linear-gradient(180deg, #26C6BC 0%, #20B2AA 100%);
+            color: white;
+            box-shadow: 0 2px 0 #1A7A74;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="phone-screen">
+            <div class="dynamic-island"></div>
+            
+            <div class="status-bar">
+                <span class="status-time">9:41</span>
+                <div class="status-icons">
+                    <span>📶</span>
+                    <span>📡</span>
+                    <span>🔋</span>
+                </div>
+            </div>
+            
+            <div class="app-content">
+                <a href="{% if view_mode %}/history{% else %}/scan{% endif %}" class="back-link">← {% if view_mode %}이력으로{% else %}다시 촬영{% endif %}</a>
+                
+                <div class="header">
+                    <h1><span style="font-size: 1.2em;">📋</span> 스마트 성분표 스캔</h1>
+                    <p>성분 확인 및 수정</p>
+                </div>
+                
+                <!-- 스캔한 이미지 미리보기 -->
+                <div class="card">
+                    <div class="card-title">📷 스캔한 영양성분표</div>
+                    <div class="scan-image-box" id="scanImageBox">
+                        <img id="scannedImage" src="" alt="스캔 이미지">
+                    </div>
+                </div>
+                
+                <div class="scan-summary">
+                    <h3>💊 스캔된 영양제</h3>
+                    <p>주성분: <span id="mainIngredients">-</span></p>
+                </div>
+                
+                <div class="card">
+                    <div class="ingredients-header">
+                        <h2>🧪 인식된 성분 (<span id="ingredientCount">0</span>개)</h2>
+                        <button class="btn-add" onclick="addNewIngredient()">+ 추가</button>
+                    </div>
+                    
+                    <div id="ingredientsList"></div>
+                </div>
+                
+                <button class="tts-button" id="ttsButton" onclick="toggleTTS()">
+                    <span id="ttsIcon">🔊</span>
+                    <span id="ttsText">음성으로 듣기 (TTS)</span>
+                </button>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="history.back()">← 취소</button>
+                    <button class="btn btn-primary" onclick="confirmAndAnalyze()">분석 시작 →</button>
+                </div>
+            </div>
+            
+            <div class="home-indicator"></div>
+        </div>
+    </div>
+    
+    <script>
+        let ingredients = [];
+        let scanData = null;
+        let isSpeaking = false;
+        let speechSynth = window.speechSynthesis;
+        
+        // 서버에서 전달받은 view_mode 및 saved_scan
+        const viewMode = {{ view_mode | default(false) | tojson }};
+        const savedScan = {{ saved_scan | default(none) | tojson }};
+        const savedScanId = {{ scan_id | default(0) }};
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            if (viewMode && savedScan) {
+                // 저장된 스캔 보기 모드
+                ingredients = savedScan.ingredients || [];
+                
+                // 스캔 이미지 표시 (있으면)
+                if (savedScan.image_url) {
+                    document.getElementById('scannedImage').src = savedScan.image_url;
+                }
+                
+                renderIngredients();
+                updateMainIngredients();
+                
+                // 버튼 변경: 분석 시작 → 분석 보기 (.btn-primary 선택자로 수정)
+                const analyzeBtn = document.querySelector('.btn-primary');
+                if (analyzeBtn) {
+                    analyzeBtn.textContent = '분석 결과 보기 →';
+                    analyzeBtn.onclick = function() {
+                        window.location.href = '/analysis/safety?scan_id=' + savedScanId;
+                    };
+                }
+                
+                // 취소 버튼 → 이력으로 (.btn-secondary 선택자로 수정)
+                const cancelBtn = document.querySelector('.btn-secondary');
+                if (cancelBtn) {
+                    cancelBtn.textContent = '← 이력으로';
+                    cancelBtn.onclick = function() {
+                        window.location.href = '/history';
+                    };
+                }
+                
+                // 수정/삭제 버튼 숨기기 (view mode)
+                document.querySelectorAll('.btn-icon').forEach(btn => {
+                    btn.style.display = 'none';
+                });
+                
+                // 추가 버튼 숨기기
+                const addBtn = document.querySelector('.btn-add');
+                if (addBtn) addBtn.style.display = 'none';
+                
+            } else {
+                // 기존 새 스캔 모드
+                const storedData = localStorage.getItem('scanData');
+                
+                if (storedData) {
+                    try {
+                        scanData = JSON.parse(storedData);
+                        ingredients = scanData.ingredients || [];
+                        
+                        // 스캔 이미지 표시
+                        if (scanData.image_url) {
+                            document.getElementById('scannedImage').src = scanData.image_url;
+                        }
+                        
+                        renderIngredients();
+                        updateMainIngredients();
+                    } catch (error) {
+                        alert('스캔 데이터를 불러오는 중 오류가 발생했습니다.');
+                        window.location.href = '/scan';
+                    }
+                } else {
+                    alert('스캔 데이터가 없습니다. 다시 촬영해주세요.');
+                    window.location.href = '/scan';
+                }
+            }
+        });
+        
+        function updateMainIngredients() {
+            const names = ingredients.slice(0, 3).map(i => i.name).join(', ');
+            document.getElementById('mainIngredients').textContent = names || '-';
+        }
+        
+        function renderIngredients() {
+            const container = document.getElementById('ingredientsList');
+            container.innerHTML = '';
+            
+            if (ingredients.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">인식된 성분이 없습니다</p>';
+                document.getElementById('ingredientCount').textContent = '0';
+                return;
+            }
+            
+            // 단위 표시 변환 함수 (mcg → µg)
+            const formatUnit = (unit) => {
+                if (!unit) return '';
+                return unit
+                    .replace(/mcg/gi, 'µg')
+                    .replace(/ug/gi, 'µg')
+                    .replace(/μg/gi, 'µg');
+            };
+            
+            ingredients.forEach((ing, index) => {
+                let icon = '💊';
+                if (ing.name.includes('비타민')) icon = '🟡';
+                else if (ing.name.includes('칼슘') || ing.name.includes('마그네슘')) icon = '⚪';
+                else if (ing.name.includes('오메가') || ing.name.includes('DHA')) icon = '🟠';
+                
+                const displayUnit = formatUnit(ing.unit);
+                
+                const item = document.createElement('div');
+                item.className = 'ingredient-item';
+                item.id = `ingredient-${index}`;
+                
+                item.innerHTML = `
+                    <div class="ingredient-main">
+                        <div class="ingredient-info">
+                            <div class="ingredient-name">
+                                <span>${icon}</span> ${ing.name}
+                            </div>
+                            <div class="ingredient-amount">${ing.amount}${displayUnit}</div>
+                        </div>
+                        <div class="ingredient-actions">
+                            <button class="btn-icon" onclick="toggleEdit(${index})">✏️</button>
+                            <button class="btn-icon" onclick="deleteIngredient(${index})">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="ingredient-edit">
+                        <div class="edit-row">
+                            <input type="text" id="name-${index}" value="${ing.name}" placeholder="성분명">
+                            <input type="text" id="amount-${index}" value="${ing.amount}${displayUnit}" placeholder="함량">
+                        </div>
+                        <button class="btn-save" onclick="saveEdit(${index})">저장</button>
+                    </div>
+                `;
+                
+                container.appendChild(item);
+            });
+            
+            document.getElementById('ingredientCount').textContent = ingredients.length;
+            updateMainIngredients();
+        }
+        
+        function toggleEdit(index) {
+            document.getElementById(`ingredient-${index}`).classList.toggle('editing');
+        }
+        
+        function saveEdit(index) {
+            const nameInput = document.getElementById(`name-${index}`);
+            const amountInput = document.getElementById(`amount-${index}`);
+            const amountStr = amountInput.value;
+            const match = amountStr.match(/^([\d.]+)\s*(.+)$/);
+            
+            if (match) {
+                ingredients[index].name = nameInput.value;
+                ingredients[index].amount = parseFloat(match[1]);
+                ingredients[index].unit = match[2];
+            } else {
+                ingredients[index].name = nameInput.value;
+            }
+            
+            renderIngredients();
+        }
+        
+        function deleteIngredient(index) {
+            if (confirm('이 성분을 삭제하시겠습니까?')) {
+                ingredients.splice(index, 1);
+                renderIngredients();
+            }
+        }
+        
+        function addNewIngredient() {
+            // 모달 열기
+            document.getElementById('addModal').classList.add('active');
+            document.getElementById('modal-name').value = '';
+            document.getElementById('modal-amount').value = '';
+            document.getElementById('modal-unit').value = 'mg';
+            document.getElementById('modal-name').focus();
+        }
+        
+        function closeAddModal() {
+            document.getElementById('addModal').classList.remove('active');
+        }
+        
+        function confirmAddIngredient() {
+            const name = document.getElementById('modal-name').value.trim();
+            const amount = parseFloat(document.getElementById('modal-amount').value);
+            const unit = document.getElementById('modal-unit').value;
+            
+            if (!name) {
+                alert('성분명을 입력하세요.');
+                return;
+            }
+            
+            if (isNaN(amount) || amount <= 0) {
+                alert('함량을 올바르게 입력하세요.');
+                return;
+            }
+            
+            ingredients.push({ name, amount, unit });
+            renderIngredients();
+            closeAddModal();
+        }
+        
+        function toggleTTS() {
+            const button = document.getElementById('ttsButton');
+            
+            if (isSpeaking) {
+                speechSynth.cancel();
+                isSpeaking = false;
+                button.classList.remove('speaking');
+                document.getElementById('ttsIcon').textContent = '🔊';
+                document.getElementById('ttsText').textContent = '음성으로 듣기 (TTS)';
+            } else {
+                if (ingredients.length === 0) {
+                    alert('읽을 성분이 없습니다.');
+                    return;
+                }
+                
+                isSpeaking = true;
+                button.classList.add('speaking');
+                document.getElementById('ttsIcon').textContent = '⏹️';
+                document.getElementById('ttsText').textContent = '음성 중지';
+                
+                // 숫자를 한글 기수형으로 변환 (1 → 일, 2 → 이)
+                const numToKorean = (n) => {
+                    const nums = ['', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구', '십',
+                                  '십일', '십이', '십삼', '십사', '십오', '십육', '십칠', '십팔', '십구', '이십'];
+                    return nums[n] || String(n);
+                };
+                
+                // 단위를 한글로 변환
+                const unitToKorean = (unit) => {
+                    if (!unit) return '';
+                    return unit
+                        .replace(/mcg/gi, '마이크로그램')
+                        .replace(/µg/gi, '마이크로그램')
+                        .replace(/ug/gi, '마이크로그램')
+                        .replace(/μg/gi, '마이크로그램')
+                        .replace(/mg/gi, '밀리그램')
+                        .replace(/g/gi, '그램')
+                        .replace(/ml/gi, '밀리리터')
+                        .replace(/IU/gi, '아이유')
+                        .replace(/kcal/gi, '킬로칼로리');
+                };
+                
+                let text = `스캔된 영양제 성분 ${ingredients.length}종입니다. `;
+                ingredients.forEach((ing, i) => {
+                    const unitKorean = unitToKorean(ing.unit);
+                    text += `${numToKorean(i + 1)}번, ${ing.name}, ${ing.amount} ${unitKorean}. `;
+                });
+                text += '이상입니다.';
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'ko-KR';
+                utterance.rate = 0.9;
+                
+                utterance.onend = () => {
+                    isSpeaking = false;
+                    button.classList.remove('speaking');
+                    document.getElementById('ttsIcon').textContent = '🔊';
+                    document.getElementById('ttsText').textContent = '음성으로 듣기 (TTS)';
+                };
+                
+                speechSynth.speak(utterance);
+            }
+        }
+        
+        async function confirmAndAnalyze() {
+            if (ingredients.length === 0) {
+                alert('성분이 하나도 없습니다.');
+                return;
+            }
+            
+            const loadingDiv = document.createElement('div');
+            loadingDiv.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999;';
+            loadingDiv.innerHTML = '<div style="background: white; padding: 40px; border-radius: 20px; text-align: center;"><div style="font-size: 3em;">⏳</div><p style="margin-top: 20px; font-size: 1.2em; font-weight: 700;">분석 중...</p></div>';
+            document.body.appendChild(loadingDiv);
+            
+            try {
+                const formData = new FormData();
+                const imageBlob = await fetch(scanData.image_url).then(r => r.blob());
+                formData.append('image', imageBlob, 'scan.jpg');
+                formData.append('ingredients', JSON.stringify(ingredients));
+                
+                const response = await fetch('/api/scan/confirm', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                document.body.removeChild(loadingDiv);
+                
+                if (result.success) {
+                    localStorage.removeItem('scanData');
+                    window.location.href = '/analysis/safety?scan_id=' + result.scan_id;
+                } else {
+                    alert('분석 실패: ' + (result.message || result.error));
+                }
+            } catch (error) {
+                document.body.removeChild(loadingDiv);
+                alert('에러: ' + error.message);
+            }
+        }
+        
+        window.addEventListener('beforeunload', () => speechSynth.cancel());
+    </script>
+<!-- 성분 추가 모달 -->
+<div class="modal-overlay" id="addModal">
+    <div class="modal-content">
+        <div class="modal-title">➕ 성분 추가</div>
+        <div class="modal-field">
+            <label>성분명</label>
+            <input type="text" id="modal-name" placeholder="예: 비타민C, 홍삼, 나트륨">
+        </div>
+        <div class="modal-row">
+            <div class="modal-field">
+                <label>함량</label>
+                <input type="number" id="modal-amount" placeholder="100" step="any">
+            </div>
+            <div class="modal-field">
+                <label>단위</label>
+                <select id="modal-unit">
+                    <option value="mg" selected>mg</option>
+                    <option value="g">g</option>
+                    <option value="µg">µg</option>
+                    <option value="kcal">kcal</option>
+                    <option value="CFU">CFU</option>
+                    <option value="IU">IU</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-cancel" onclick="closeAddModal()">취소</button>
+            <button class="modal-btn modal-btn-confirm" onclick="confirmAddIngredient()">추가</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>

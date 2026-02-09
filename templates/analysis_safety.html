@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>안전 신호등 - 뉴트리-스캐너</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Noto Sans KR', sans-serif; 
+            background: linear-gradient(135deg, 
+                rgba(173, 216, 230, 0.6) 0%, 
+                rgba(176, 224, 230, 0.5) 25%,
+                rgba(200, 230, 240, 0.4) 50%,
+                rgba(220, 240, 250, 0.5) 75%,
+                rgba(240, 248, 255, 0.6) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 720px;
+            background: #1a1a1a;
+            border-radius: 55px;
+            padding: 12px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #F5F5F7;
+            border-radius: 45px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .dynamic-island {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 125px;
+            height: 37px;
+            background: #000;
+            border-radius: 25px;
+            z-index: 100;
+        }
+
+        .status-bar {
+            height: 54px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 28px 6px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .status-time { font-weight: 700; font-size: 16px; }
+        .status-icons { display: flex; gap: 6px; font-size: 17px; }
+
+        .app-content {
+            height: calc(100% - 54px - 25px);
+            overflow-y: auto;
+        }
+
+        .app-content::-webkit-scrollbar { display: none; }
+
+        .home-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 135px;
+            height: 5px;
+            background: #000;
+            border-radius: 5px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #20B2AA 0%, #2E8B7A 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+        .header h1 { font-size: 1.5em; margin-bottom: 8px; }
+        .header p { font-size: 0.9em; opacity: 0.9; }
+
+        .back-link {
+            display: inline-block;
+            padding: 12px 15px;
+            color: #20B2AA;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* 신호등 */
+        .traffic-light-box {
+            background: white;
+            margin: 15px;
+            padding: 20px;
+            border-radius: 18px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .traffic-light {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .light {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75em;
+            font-weight: 600;
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+
+        .light-red { background: #FFE5E5; color: #D32F2F; }
+        .light-yellow { background: #FFF8E1; color: #F57C00; }
+        .light-green { background: #E8F5E9; color: #388E3C; }
+
+        .light.active {
+            opacity: 1;
+            transform: scale(1.1);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .light .emoji { font-size: 1.8em; margin-bottom: 3px; }
+
+        .result-text {
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #222;
+        }
+
+        /* 알림 카드 */
+        .alert-card {
+            margin: 15px;
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .alert-danger {
+            background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
+            border-left: 4px solid #F44336;
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%);
+            border-left: 4px solid #FF9800;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+            border-left: 4px solid #4CAF50;
+        }
+
+        .alert-card h3 {
+            font-size: 1em;
+            margin-bottom: 10px;
+            color: #222;
+        }
+
+        .alert-item {
+            background: rgba(255,255,255,0.7);
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .alert-item:last-child { margin-bottom: 0; }
+
+        .alert-item .title {
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 5px;
+        }
+
+        .alert-item .desc {
+            font-size: 0.85em;
+            color: #1A0033;
+            font-weight: 500;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        .tag-danger { background: #FFCDD2; color: #C62828; }
+        .tag-disease { background: #E1BEE7; color: #7B1FA2; }
+        .tag-good { background: #C8E6C9; color: #2E7D32; }
+
+        /* 버튼 */
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95em;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(180deg, #F5F5F5 0%, #E0E0E0 100%);
+            color: #333;
+            box-shadow: 0 3px 0 #BDBDBD;
+        }
+
+        .btn-primary {
+            background: linear-gradient(180deg, #26C6BC 0%, #20B2AA 50%, #1A9690 100%);
+            color: white;
+            box-shadow: 0 4px 0 #1A7A74;
+        }
+
+        @media (max-width: 420px) {
+            body { padding: 0; background: #F5F5F7; }
+            .phone-frame {
+                width: 100%; height: 100vh;
+                border-radius: 0; padding: 0;
+                box-shadow: none; background: transparent;
+            }
+            .phone-screen { border-radius: 0; }
+            .dynamic-island, .home-indicator { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="phone-screen">
+            <div class="dynamic-island"></div>
+            
+            <div class="status-bar">
+                <span class="status-time">9:41</span>
+                <div class="status-icons">
+                    <span>📶</span>
+                    <span>📡</span>
+                    <span>🔋</span>
+                </div>
+            </div>
+            
+            <div class="app-content">
+                <a href="/" class="back-link">← 메인으로</a>
+                
+                <div class="header">
+                    <h1><span style="font-size: 1.2em;">🚦</span> 스마트 안전 신호등</h1>
+                    <p>기저질환 기반 안전성 분석</p>
+                </div>
+                
+                <!-- 신호등 -->
+                <div class="traffic-light-box">
+                    <div class="traffic-light">
+                        <div class="light light-red {% if safety_result.overall_risk == 'danger' %}active{% endif %}">
+                            <span class="emoji">🔴</span>
+                            위험
+                        </div>
+                        <div class="light light-yellow {% if safety_result.overall_risk == 'warning' %}active{% endif %}">
+                            <span class="emoji">🟡</span>
+                            주의
+                        </div>
+                        <div class="light light-green {% if safety_result.overall_risk == 'safe' %}active{% endif %}">
+                            <span class="emoji">🟢</span>
+                            안전
+                        </div>
+                    </div>
+                    <p class="result-text">
+                        {% if safety_result.overall_risk == 'danger' %}
+                        ⚠️ 주의가 필요합니다
+                        {% elif safety_result.overall_risk == 'warning' %}
+                        🟡 확인이 필요합니다
+                        {% else %}
+                        ✅ 안전합니다
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <!-- 경고 -->
+                {% if safety_result.warnings %}
+                <div class="alert-card alert-danger">
+                    <h3>⚠️ 주의 성분</h3>
+                    {% for warning in safety_result.warnings %}
+                    <div class="alert-item">
+                        <div class="title">
+                            <span class="tag tag-danger">{{ warning.category }}</span>
+                            <span class="tag tag-disease">{{ warning.disease }}</span>
+                            {{ warning.ingredient }}
+                        </div>
+                        <div class="desc">{{ warning.reason }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <!-- 권장 -->
+                {% if safety_result.recommendations %}
+                <div class="alert-card alert-success">
+                    <h3>👍 권장 성분</h3>
+                    {% for rec in safety_result.recommendations %}
+                    <div class="alert-item">
+                        <div class="title">
+                            <span class="tag tag-good">권장</span>
+                            {{ rec.ingredient }}
+                        </div>
+                        <div class="desc">{{ rec.reason }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <!-- 버튼 -->
+                <div class="nav-buttons">
+                    <a href="/analysis/dri?scan_id={{ scan_id }}" class="btn btn-primary">권장량 분석 →</a>
+                </div>
+                
+                <div class="nav-buttons">
+                    <a href="/history" class="btn btn-secondary">이력 보기</a>
+                </div>
+            </div>
+            
+            <div class="home-indicator"></div>
+        </div>
+    </div>
+</body>
+</html>

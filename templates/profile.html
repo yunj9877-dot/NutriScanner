@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프로필 설정 - 뉴트리-스캐너</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Noto Sans KR', sans-serif; 
+            background: linear-gradient(135deg, 
+                rgba(173, 216, 230, 0.6) 0%, 
+                rgba(176, 224, 230, 0.5) 25%,
+                rgba(200, 230, 240, 0.4) 50%,
+                rgba(220, 240, 250, 0.5) 75%,
+                rgba(240, 248, 255, 0.6) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 720px;
+            background: #1a1a1a;
+            border-radius: 55px;
+            padding: 12px;
+            box-shadow: 
+                0 30px 60px rgba(0,0,0,0.2),
+                0 0 0 1px #333,
+                inset 0 0 0 1px #2a2a2a;
+            position: relative;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #F5F5F7;
+            border-radius: 45px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .dynamic-island {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 125px;
+            height: 37px;
+            background: #000;
+            border-radius: 25px;
+            z-index: 100;
+        }
+
+        .status-bar {
+            height: 54px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 28px 6px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .status-time { font-weight: 700; font-size: 16px; }
+        .status-icons { display: flex; gap: 6px; font-size: 17px; }
+
+        .app-content {
+            height: calc(100% - 54px - 25px);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .app-content::-webkit-scrollbar { display: none; }
+
+        .home-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 135px;
+            height: 5px;
+            background: #000;
+            border-radius: 5px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #20B2AA 0%, #2E8B7A 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+        .header h1 { font-size: 1.6em; margin-bottom: 8px; font-weight: 700; }
+        .header p { font-size: 0.95em; color: rgba(255,255,255,0.9); }
+
+        .back-link {
+            display: inline-block;
+            padding: 12px 15px;
+            color: #20B2AA;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .card {
+            background: white;
+            margin: 15px;
+            padding: 20px;
+            border-radius: 18px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #222;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            font-size: 1em;
+            font-family: 'Noto Sans KR', sans-serif;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #20B2AA;
+        }
+
+        .info-text {
+            font-size: 0.85em;
+            color: #1A0033;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+
+        .section-title {
+            font-size: 1.05em;
+            font-weight: 600;
+            color: #222;
+            margin: 20px 0 12px;
+            padding-top: 15px;
+            border-top: 1px solid #E0E0E0;
+        }
+
+        .disease-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .disease-tag {
+            padding: 10px 16px;
+            background: #F0F0F0;
+            border: 2px solid #E0E0E0;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+
+        .disease-tag.active {
+            background: #20B2AA;
+            border-color: #20B2AA;
+            color: white;
+        }
+
+        .btn-primary {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(180deg, #26C6BC 0%, #20B2AA 50%, #1A9690 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 
+                0 4px 0 #1A7A74,
+                0 6px 15px rgba(32, 178, 170, 0.4);
+            transition: all 0.15s;
+            margin-top: 20px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 6px 0 #1A7A74,
+                0 10px 25px rgba(32, 178, 170, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(2px);
+            box-shadow: 
+                0 2px 0 #1A7A74,
+                0 3px 10px rgba(32, 178, 170, 0.4);
+        }
+
+        .name-wrapper { position: relative; }
+
+        .autocomplete-list {
+            position: absolute;
+            background: white;
+            border: 2px solid #20B2AA;
+            border-radius: 12px;
+            max-height: 150px;
+            overflow-y: auto;
+            width: 100%;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .autocomplete-item {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #E0E0E0;
+        }
+
+        .autocomplete-item:hover { background: #E8F4F8; }
+        .autocomplete-item:last-child { border-bottom: none; }
+
+        @media (max-width: 420px) {
+            body { padding: 0; background: #F5F5F7; }
+            .phone-frame {
+                width: 100%; height: 100vh;
+                border-radius: 0; padding: 0;
+                box-shadow: none; background: transparent;
+            }
+            .phone-screen { border-radius: 0; }
+            .dynamic-island, .home-indicator { display: none; }
+            .status-bar { height: 44px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="phone-screen">
+            <div class="dynamic-island"></div>
+            
+            <div class="status-bar">
+                <span class="status-time">9:41</span>
+                <div class="status-icons">
+                    <span>📶</span>
+                    <span>📡</span>
+                    <span>🔋</span>
+                </div>
+            </div>
+            
+            <div class="app-content">
+                <a href="/" class="back-link">← 메인으로</a>
+                
+                <div class="header">
+                    <h1><span style="font-size: 1.2em;">👤</span> 프로필 설정</h1>
+                    <p>건강 관리를 위한 기본 정보를 입력해주세요</p>
+                </div>
+                
+                <div class="card">
+                    <form id="profileForm" action="/api/profile" method="POST">
+                        <div class="form-group">
+                            <label for="name">이름</label>
+                            <div class="name-wrapper">
+                                <input type="text" id="name" name="name" placeholder="홍길동" required autocomplete="off">
+                                <div id="autocompleteList" class="autocomplete-list"></div>
+                            </div>
+                            <p class="info-text">💡 기존 회원은 이름 입력 시 자동으로 정보가 채워집니다</p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="age">나이</label>
+                            <input type="number" id="age" name="age" min="50" max="120" value="65" required>
+                            <p class="info-text">※ 본 서비스는 50세 이상 성인 전용입니다</p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="gender">성별</label>
+                            <select id="gender" name="gender" required>
+                                <option value="">선택하세요</option>
+                                <option value="남자">남자</option>
+                                <option value="여자">여자</option>
+                            </select>
+                        </div>
+                        
+                        <div class="section-title">🏥 기저질환</div>
+                        <div class="disease-tags" id="diseaseTags">
+                            <span class="disease-tag" data-disease="고혈압">고혈압</span>
+                            <span class="disease-tag" data-disease="당뇨병">당뇨병</span>
+                            <span class="disease-tag" data-disease="고지혈증">고지혈증</span>
+                            <span class="disease-tag" data-disease="심장질환">심장질환</span>
+                            <span class="disease-tag" data-disease="신장질환">신장질환</span>
+                            <span class="disease-tag" data-disease="간질환">간질환</span>
+                            <span class="disease-tag" data-disease="골다공증">골다공증</span>
+                            <span class="disease-tag" data-disease="갑상선질환">갑상선질환</span>
+                        </div>
+                        <input type="hidden" id="diseases" name="diseases" value="">
+                        
+                        <div class="section-title">👨‍👩‍👧 보호자 정보 (선택)</div>
+                        
+                        <div class="form-group">
+                            <label for="guardian_name">보호자 이름</label>
+                            <input type="text" id="guardian_name" name="guardian_name" placeholder="홍길순">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="guardian_relation">관계</label>
+                            <select id="guardian_relation" name="guardian_relation">
+                                <option value="">선택하세요</option>
+                                <option value="딸">딸</option>
+                                <option value="아들">아들</option>
+                                <option value="배우자">배우자</option>
+                                <option value="요양보호사">요양보호사</option>
+                                <option value="기타">기타</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="guardian_phone">보호자 연락처</label>
+                            <input type="tel" id="guardian_phone" name="guardian_phone" placeholder="010-1234-5678">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="guardian_email">보호자 이메일</label>
+                            <input type="email" id="guardian_email" name="guardian_email" placeholder="guardian@email.com">
+                        </div>
+                        
+                        <!-- 프로필 수정 시 사용할 hidden 필드 -->
+                        <input type="hidden" id="user_id" name="user_id" value="">
+                        
+                        <button type="submit" class="btn-primary">💾 프로필 저장</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="home-indicator"></div>
+        </div>
+    </div>
+    
+    <script>
+        let allUsers = [];
+        
+        // 페이지 로드 시 모든 사용자 목록 가져오기
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/api/users');
+                allUsers = await response.json();
+            } catch (e) {
+                console.log('사용자 목록 로드 실패');
+            }
+            
+            // URL 파라미터 확인
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // ?new=1 파라미터가 있으면 새 사용자 모드 (폼 초기화)
+            if (urlParams.get('new') === '1') {
+                clearForm();
+                // 헤더 텍스트 변경
+                const headerTitle = document.querySelector('.header-title h1');
+                if (headerTitle) {
+                    headerTitle.innerHTML = '🆕 새 사용자 등록';
+                }
+            }
+            // ?user_id 파라미터가 있으면 해당 사용자 정보로 폼 채우기
+            else if (urlParams.get('user_id')) {
+                const userId = parseInt(urlParams.get('user_id'));
+                const user = allUsers.find(u => u.id === userId);
+                if (user) {
+                    fillUserData(user);
+                    // 헤더 텍스트 변경
+                    const headerTitle = document.querySelector('.header-title h1');
+                    if (headerTitle) {
+                        headerTitle.innerHTML = '✏️ 프로필 수정';
+                    }
+                }
+            }
+        });
+        
+        // 폼 초기화 함수
+        function clearForm() {
+            document.getElementById('name').value = '';
+            document.getElementById('age').value = 65;
+            document.getElementById('gender').value = '';
+            document.getElementById('guardian_name').value = '';
+            document.getElementById('guardian_relation').value = '';
+            document.getElementById('guardian_phone').value = '';
+            document.getElementById('guardian_email').value = '';
+            document.getElementById('user_id').value = '';
+            
+            // 기저질환 체크박스 모두 해제
+            document.querySelectorAll('input[name="diseases"]').forEach(cb => {
+                cb.checked = false;
+            });
+        }
+        
+        // 이름 입력 시 자동완성
+        const nameInput = document.getElementById('name');
+        const autocompleteList = document.getElementById('autocompleteList');
+        
+        nameInput.addEventListener('input', function() {
+            const value = this.value.trim();
+            autocompleteList.innerHTML = '';
+            
+            if (value.length < 1) {
+                autocompleteList.style.display = 'none';
+                return;
+            }
+            
+            const matches = allUsers.filter(u => u.name && u.name.includes(value));
+            
+            if (matches.length > 0) {
+                matches.forEach(user => {
+                    const item = document.createElement('div');
+                    item.className = 'autocomplete-item';
+                    item.textContent = `${user.name} (${user.age}세, ${user.gender || '성별미상'})`;
+                    item.addEventListener('click', () => fillUserData(user));
+                    autocompleteList.appendChild(item);
+                });
+                autocompleteList.style.display = 'block';
+            } else {
+                autocompleteList.style.display = 'none';
+            }
+        });
+        
+        // 사용자 데이터로 폼 채우기
+        function fillUserData(user) {
+            document.getElementById('name').value = user.name || '';
+            document.getElementById('age').value = user.age || 65;
+            document.getElementById('gender').value = user.gender || '';
+            document.getElementById('guardian_name').value = user.guardian_name || '';
+            document.getElementById('guardian_relation').value = user.guardian_relation || '';
+            document.getElementById('guardian_phone').value = user.guardian_phone || '';
+            document.getElementById('guardian_email').value = user.guardian_email || '';
+            document.getElementById('user_id').value = user.id || '';  // 프로필 수정용 ID
+            
+            // 기저질환 설정
+            document.querySelectorAll('.disease-tag').forEach(tag => {
+                tag.classList.remove('active');
+            });
+            
+            if (user.diseases) {
+                const diseases = typeof user.diseases === 'string' ? JSON.parse(user.diseases) : user.diseases;
+                diseases.forEach(disease => {
+                    const tag = document.querySelector(`.disease-tag[data-disease="${disease}"]`);
+                    if (tag) tag.classList.add('active');
+                });
+                document.getElementById('diseases').value = JSON.stringify(diseases);
+            }
+            
+            autocompleteList.style.display = 'none';
+        }
+        
+        // 다른 곳 클릭 시 자동완성 닫기
+        document.addEventListener('click', function(e) {
+            if (!nameInput.contains(e.target) && !autocompleteList.contains(e.target)) {
+                autocompleteList.style.display = 'none';
+            }
+        });
+        
+        // 나이 50세 미만 제한
+        const ageInput = document.getElementById('age');
+        ageInput.addEventListener('change', function() {
+            if (this.value < 50) {
+                alert('⚠️ 본 서비스는 50세 이상 성인 전용입니다.');
+                this.value = 50;
+            }
+        });
+        
+        // 기저질환 태그 토글
+        document.querySelectorAll('.disease-tag').forEach(tag => {
+            tag.addEventListener('click', function() {
+                this.classList.toggle('active');
+                updateDiseases();
+            });
+        });
+        
+        function updateDiseases() {
+            const selected = [];
+            document.querySelectorAll('.disease-tag.active').forEach(tag => {
+                selected.push(tag.dataset.disease);
+            });
+            document.getElementById('diseases').value = JSON.stringify(selected);
+        }
+        
+        // 폼 제출
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const userId = document.getElementById('user_id').value;
+            
+            const data = {
+                name: formData.get('name'),
+                age: parseInt(formData.get('age')),
+                gender: formData.get('gender'),
+                diseases: document.getElementById('diseases').value || '[]',
+                guardian_name: formData.get('guardian_name'),
+                guardian_relation: formData.get('guardian_relation'),
+                guardian_phone: formData.get('guardian_phone'),
+                guardian_email: formData.get('guardian_email')
+            };
+            
+            // user_id가 있으면 수정, 없으면 새로 생성
+            if (userId) {
+                data.user_id = parseInt(userId);
+            }
+            
+            try {
+                // user_id 유무에 따라 수정 또는 생성 API 호출
+                const apiUrl = userId ? '/api/profile/update' : '/api/profile';
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ 프로필이 저장되었습니다!');
+                    window.location.href = '/';
+                } else {
+                    alert('❌ 저장 실패: ' + result.message);
+                }
+            } catch (error) {
+                alert('❌ 에러: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

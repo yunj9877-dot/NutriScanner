@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>알림 및 설정 - 뉴트리-스캐너</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Noto Sans KR', sans-serif; 
+            background: linear-gradient(135deg, 
+                rgba(173, 216, 230, 0.6) 0%, 
+                rgba(200, 230, 240, 0.4) 50%,
+                rgba(240, 248, 255, 0.6) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 720px;
+            background: #1a1a1a;
+            border-radius: 55px;
+            padding: 12px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #F5F5F7;
+            border-radius: 45px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .dynamic-island {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 125px;
+            height: 37px;
+            background: #000;
+            border-radius: 25px;
+            z-index: 100;
+        }
+
+        .status-bar {
+            height: 54px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 28px 6px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .status-time { font-weight: 700; font-size: 16px; }
+        .status-icons { display: flex; gap: 6px; font-size: 17px; }
+
+        .app-content {
+            height: calc(100% - 54px - 25px);
+            overflow-y: auto;
+        }
+
+        .app-content::-webkit-scrollbar { display: none; }
+
+        .home-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 135px;
+            height: 5px;
+            background: #000;
+            border-radius: 5px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #20B2AA 0%, #2E8B7A 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+        .header h1 { font-size: 1.5em; margin-bottom: 8px; }
+        .header p { font-size: 0.9em; opacity: 0.9; }
+
+        .back-link {
+            display: inline-block;
+            padding: 12px 15px;
+            color: #20B2AA;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* 섹션 스타일 */
+        .section {
+            margin: 15px;
+        }
+
+        .section-title {
+            font-size: 0.95em;
+            font-weight: 600;
+            color: #222;
+            padding: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title .emoji { font-size: 1.2em; }
+
+        /* 카드 스타일 */
+        .card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+
+        /* 토글 아이템 */
+        .toggle-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #F0F0F0;
+        }
+
+        .toggle-item:last-child { border-bottom: none; }
+
+        .toggle-info { flex: 1; }
+
+        .toggle-title {
+            font-weight: 600;
+            font-size: 0.95em;
+            color: #222;
+            margin-bottom: 3px;
+        }
+
+        .toggle-desc {
+            font-size: 0.8em;
+            color: #1A0033;
+            font-weight: 500;
+        }
+
+        /* 토글 스위치 */
+        .toggle-switch {
+            position: relative;
+            width: 52px;
+            height: 32px;
+            cursor: pointer;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            border-radius: 32px;
+            transition: 0.3s;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: #4CAF50;
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        /* 연결 아이템 */
+        .connect-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #F0F0F0;
+            gap: 12px;
+        }
+
+        .connect-item:last-child { border-bottom: none; }
+
+        .connect-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+        }
+
+        .connect-icon.guardian { background: #FFF3E0; }
+        .connect-icon.hospital { background: #E8F5E9; }
+        .connect-icon.insurance { background: #E3F2FD; }
+
+        .connect-info { flex: 1; }
+
+        .connect-name {
+            font-weight: 600;
+            font-size: 0.95em;
+            color: #222;
+        }
+
+        .connect-status {
+            font-size: 0.8em;
+            color: #4CAF50;
+            font-weight: 500;
+        }
+
+        .connect-status.inactive { color: #999; }
+
+        .connect-action {
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-connected {
+            background: #E8F5E9;
+            color: #388E3C;
+        }
+
+        .btn-connect {
+            background: #20B2AA;
+            color: white;
+        }
+
+        /* 추가 버튼 */
+        .add-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            color: #20B2AA;
+            font-weight: 600;
+            font-size: 0.9em;
+            cursor: pointer;
+            gap: 5px;
+        }
+
+        .add-item:hover {
+            background: #F8F8F8;
+        }
+
+        /* 알림 박스 */
+        .info-box {
+            background: #FFF8E5;
+            border-left: 4px solid #FFB800;
+            padding: 12px 15px;
+            margin: 15px;
+            border-radius: 0 12px 12px 0;
+        }
+
+        .info-box p {
+            font-size: 0.85em;
+            color: #1A0033;
+            font-weight: 500;
+        }
+        
+        .connect-detail {
+            font-size: 0.75em;
+            color: #666;
+            margin-top: 2px;
+        }
+        
+        /* 모달 스타일 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            width: 90%;
+            max-width: 350px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        
+        .modal-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .modal-form-group {
+            margin-bottom: 15px;
+        }
+        
+        .modal-form-group label {
+            display: block;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .modal-form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #E0E0E0;
+            border-radius: 10px;
+            font-size: 1em;
+        }
+        
+        .modal-form-group input:focus {
+            outline: none;
+            border-color: #20B2AA;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .modal-btn.cancel {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        .modal-btn.confirm {
+            background: #20B2AA;
+            color: white;
+        }
+        
+        /* 이메일 미리보기 모달 스타일 */
+        .email-modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            width: 95%;
+            max-width: 370px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        
+        .email-preview {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 0.85em;
+        }
+        
+        .email-header {
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .email-field {
+            display: flex;
+            margin-bottom: 5px;
+        }
+        
+        .email-label {
+            font-weight: 600;
+            color: #666;
+            width: 50px;
+        }
+        
+        .email-value {
+            color: #333;
+            flex: 1;
+        }
+        
+        .email-body {
+            line-height: 1.6;
+        }
+        
+        .email-body h4 {
+            color: #20B2AA;
+            margin: 10px 0 5px;
+            font-size: 0.95em;
+        }
+        
+        .scan-item {
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 8px 0;
+            border-left: 3px solid #20B2AA;
+        }
+        
+        .scan-item.warning {
+            border-left-color: #FFA500;
+        }
+        
+        .scan-item.danger {
+            border-left-color: #FF6B6B;
+        }
+        
+        .no-scan-msg {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+        }
+        
+        .modal-btn.send {
+            background: #4CAF50;
+            color: white;
+        }
+
+        @media (max-width: 420px) {
+            body { padding: 0; background: #F5F5F7; }
+            .phone-frame {
+                width: 100%; height: 100vh;
+                border-radius: 0; padding: 0;
+                box-shadow: none; background: transparent;
+            }
+            .phone-screen { border-radius: 0; }
+            .dynamic-island, .home-indicator { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 보호자 이메일 전송 모달 -->
+    <div class="modal-overlay" id="emailModal">
+        <div class="email-modal-content">
+            <div class="modal-title">📧 보호자에게 리포트 전송</div>
+            
+            <div class="email-preview">
+                <div class="email-header">
+                    <div class="email-field">
+                        <span class="email-label">받는이</span>
+                        <span class="email-value" id="emailTo">{{ user.guardian_email if user and user.guardian_email else '-' }}</span>
+                    </div>
+                    <div class="email-field">
+                        <span class="email-label">제목</span>
+                        <span class="email-value">[뉴트리-스캐너] {{ user.name if user else '' }}님의 영양제 분석 리포트</span>
+                    </div>
+                </div>
+                
+                <div class="email-body" id="emailBody">
+                    <p>안녕하세요, <strong>{{ user.guardian_name if user and user.guardian_name else '보호자' }}</strong>님.</p>
+                    <p><strong>{{ user.name if user else '' }}</strong>님의 최근 영양제 분석 결과를 알려드립니다.</p>
+                    
+                    <h4>📊 최근 스캔 결과</h4>
+                    <div id="scanResultsPreview">
+                        <div class="no-scan-msg">스캔 정보를 불러오는 중...</div>
+                    </div>
+                    
+                    <h4>💡 종합 의견</h4>
+                    <div id="summaryPreview">
+                        <p>분석 결과를 확인해주세요.</p>
+                    </div>
+                    
+                    <p style="margin-top: 15px; color: #666; font-size: 0.85em;">
+                        - 뉴트리-스캐너 드림
+                    </p>
+                </div>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" onclick="closeEmailModal()">취소</button>
+                <button class="modal-btn send" onclick="sendEmailToGuardian()">📤 보내기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 기관 연동 모달 -->
+    <div class="modal-overlay" id="institutionModal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle">🏥 기관 연동</div>
+            <input type="hidden" id="modalInstName">
+            <input type="hidden" id="modalInstType">
+            
+            <div class="modal-form-group" id="nameGroup" style="display:none;">
+                <label>기관명</label>
+                <input type="text" id="modalCustomName" placeholder="기관명을 입력하세요">
+            </div>
+            
+            <div class="modal-form-group">
+                <label>연락처 (전화번호)</label>
+                <input type="tel" id="modalPhone" placeholder="02-1234-5678">
+            </div>
+            
+            <div class="modal-form-group">
+                <label>이메일 주소</label>
+                <input type="email" id="modalEmail" placeholder="example@institution.com">
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" onclick="closeModal()">취소</button>
+                <button class="modal-btn confirm" onclick="confirmInstitution()">연동하기</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="phone-frame">
+        <div class="phone-screen">
+            <div class="dynamic-island"></div>
+            
+            <div class="status-bar">
+                <span class="status-time">9:41</span>
+                <div class="status-icons">
+                    <span>📶</span>
+                    <span>📡</span>
+                    <span>🔋</span>
+                </div>
+            </div>
+            
+            <div class="app-content">
+                <a href="/" class="back-link">← 메인으로</a>
+                
+                <div class="header">
+                    <h1><span style="font-size: 1.2em;">⚙️</span> 알림 및 설정</h1>
+                    <p>알림, 보호자, 건강기관 연동</p>
+                </div>
+                
+                <!-- 알림 설정 -->
+                <div class="section">
+                    <div class="section-title">
+                        <span class="emoji">🔔</span> 알림 설정
+                    </div>
+                    <div class="card">
+                        <div class="toggle-item">
+                            <div class="toggle-info">
+                                <div class="toggle-title">위험 성분 알림</div>
+                                <div class="toggle-desc">위험등급 발견 시 즉시 알림</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="dangerAlert" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-item">
+                            <div class="toggle-info">
+                                <div class="toggle-title">1일 권장량 초과 알림</div>
+                                <div class="toggle-desc">과다 섭취 시 경고</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="overdoseAlert" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                    </div>
+                </div>
+                
+                <!-- 보호자 연결 -->
+                <div class="section">
+                    <div class="section-title">
+                        <span class="emoji">👨‍👩‍👧</span> 보호자 연결
+                    </div>
+                    <div class="card">
+                        {% if user and user.guardian_name %}
+                        <div class="connect-item">
+                            <div class="connect-icon guardian">👤</div>
+                            <div class="connect-info">
+                                <div class="connect-name">{{ user.guardian_name }} ({{ user.guardian_relation or '보호자' }})</div>
+                                <div class="connect-status">✅ 실시간 알림 전송 중</div>
+                                {% if user.guardian_phone %}
+                                <div class="connect-detail">📞 {{ user.guardian_phone }}</div>
+                                {% endif %}
+                                {% if user.guardian_email %}
+                                <div class="connect-detail">📧 {{ user.guardian_email }}</div>
+                                {% endif %}
+                            </div>
+                            <button class="connect-action btn-connected" onclick="openEmailModal()">연결됨</button>
+                        </div>
+                        {% else %}
+                        <div class="connect-item">
+                            <div class="connect-icon guardian">👤</div>
+                            <div class="connect-info">
+                                <div class="connect-name">보호자 미등록</div>
+                                <div class="connect-status inactive">프로필에서 등록해주세요</div>
+                            </div>
+                            <button class="connect-action btn-connect" onclick="location.href='/profile'">등록</button>
+                        </div>
+                        {% endif %}
+
+                    </div>
+                </div>
+                
+                <!-- 건강관리기관 -->
+                <div class="section">
+                    <div class="section-title">
+                        <span class="emoji">🏥</span> 건강관리기관
+                    </div>
+                    <div class="card" id="institutionsList">
+                        <div class="connect-item" id="hospital-item">
+                            <div class="connect-icon hospital">🏥</div>
+                            <div class="connect-info">
+                                <div class="connect-name">서울요양센터</div>
+                                <div class="connect-status" id="hospital-status">연동 설정 필요</div>
+                                <div class="connect-detail" id="hospital-detail" style="display:none;"></div>
+                            </div>
+                            <button class="connect-action btn-connect" id="hospital-btn" onclick="openInstitutionModal('서울요양센터', 'hospital')">연결</button>
+                        </div>
+                        <div class="connect-item" id="insurance-item">
+                            <div class="connect-icon insurance">🏛️</div>
+                            <div class="connect-info">
+                                <div class="connect-name">국민건강보험공단</div>
+                                <div class="connect-status" id="insurance-status">연동 설정 필요</div>
+                                <div class="connect-detail" id="insurance-detail" style="display:none;"></div>
+                            </div>
+                            <button class="connect-action btn-connect" id="insurance-btn" onclick="openInstitutionModal('국민건강보험공단', 'insurance')">연결</button>
+                        </div>
+                        <div class="add-item" onclick="openInstitutionModal('', 'other')">
+                            ➕ 기관 추가
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 안내 박스 -->
+                <div class="info-box">
+                    <p>💡 연결된 보호자와 기관에게 위험 알림 및 월간 리포트가 자동 전송됩니다.</p>
+                </div>
+            </div>
+            
+            <div class="home-indicator"></div>
+        </div>
+    </div>
+    
+    <script>
+        // 현재 사용자 ID
+        const userId = {{ user.id if user else 'null' }};
+        
+        // 토글 상태 저장
+        document.querySelectorAll('.toggle-switch input').forEach(toggle => {
+            // 로컬 스토리지에서 상태 복원
+            const savedState = localStorage.getItem(toggle.id);
+            if (savedState !== null) {
+                toggle.checked = savedState === 'true';
+            }
+            
+            // 변경 시 저장
+            toggle.addEventListener('change', function() {
+                localStorage.setItem(this.id, this.checked);
+                
+                // 알림 표시
+                const statusText = this.checked ? '활성화' : '비활성화';
+                showToast(`알림이 ${statusText}되었습니다`);
+            });
+        });
+        
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 100px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0,0,0,0.8);
+                color: white;
+                padding: 12px 24px;
+                border-radius: 25px;
+                font-size: 0.9em;
+                z-index: 9999;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.remove(), 2000);
+        }
+        
+        // 모달 열기
+        function openInstitutionModal(name, type) {
+            document.getElementById('modalInstName').value = name;
+            document.getElementById('modalInstType').value = type;
+            document.getElementById('modalPhone').value = '';
+            document.getElementById('modalEmail').value = '';
+            
+            if (name) {
+                document.getElementById('modalTitle').textContent = `🏥 ${name} 연동`;
+                document.getElementById('nameGroup').style.display = 'none';
+            } else {
+                document.getElementById('modalTitle').textContent = '🏥 새 기관 연동';
+                document.getElementById('nameGroup').style.display = 'block';
+            }
+            
+            document.getElementById('institutionModal').classList.add('active');
+        }
+        
+        // 모달 닫기
+        function closeModal() {
+            document.getElementById('institutionModal').classList.remove('active');
+        }
+        
+        // 기관 연동 확인
+        async function confirmInstitution() {
+            if (!userId) {
+                alert('프로필을 먼저 설정해주세요.');
+                return;
+            }
+            
+            let name = document.getElementById('modalInstName').value;
+            const type = document.getElementById('modalInstType').value;
+            const phone = document.getElementById('modalPhone').value;
+            const email = document.getElementById('modalEmail').value;
+            
+            // 새 기관인 경우 이름 가져오기
+            if (!name) {
+                name = document.getElementById('modalCustomName').value;
+                if (!name) {
+                    alert('기관명을 입력해주세요.');
+                    return;
+                }
+            }
+            
+            if (!phone && !email) {
+                alert('전화번호 또는 이메일을 입력해주세요.');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/institutions/connect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        name: name,
+                        type: type,
+                        phone: phone,
+                        email: email
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast(`✅ ${name} 연동 완료!`);
+                    closeModal();
+                    updateInstitutionUI(name, type, phone, email);
+                } else {
+                    alert('연동 실패: ' + result.message);
+                }
+            } catch (error) {
+                alert('오류: ' + error.message);
+            }
+        }
+        
+        // UI 업데이트
+        function updateInstitutionUI(name, type, phone, email) {
+            let statusEl, detailEl, btnEl;
+            
+            if (name === '서울요양센터') {
+                statusEl = document.getElementById('hospital-status');
+                detailEl = document.getElementById('hospital-detail');
+                btnEl = document.getElementById('hospital-btn');
+            } else if (name === '국민건강보험공단') {
+                statusEl = document.getElementById('insurance-status');
+                detailEl = document.getElementById('insurance-detail');
+                btnEl = document.getElementById('insurance-btn');
+            }
+            
+            if (statusEl) {
+                statusEl.textContent = '✅ 연동 중';
+                statusEl.classList.remove('inactive');
+            }
+            
+            if (detailEl) {
+                let details = [];
+                if (phone) details.push(`📞 ${phone}`);
+                if (email) details.push(`📧 ${email}`);
+                detailEl.innerHTML = details.join('<br>');
+                detailEl.style.display = 'block';
+            }
+            
+            if (btnEl) {
+                btnEl.textContent = '연결됨';
+                btnEl.classList.remove('btn-connect');
+                btnEl.classList.add('btn-connected');
+            }
+        }
+        
+        // 페이지 로드 시 기존 연동 정보 로드
+        async function loadInstitutions() {
+            if (!userId) return;
+            
+            try {
+                const response = await fetch(`/api/institutions/${userId}`);
+                const result = await response.json();
+                
+                if (result.success && result.institutions) {
+                    result.institutions.forEach(inst => {
+                        updateInstitutionUI(inst.name, inst.type, inst.phone, inst.email);
+                    });
+                }
+            } catch (error) {
+                console.log('기관 정보 로드 실패:', error);
+            }
+        }
+        
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', loadInstitutions);
+        
+        // 모달 외부 클릭 시 닫기
+        document.getElementById('institutionModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+        
+        // ========== 보호자 이메일 전송 기능 ==========
+        
+        // 이메일 모달 열기
+        async function openEmailModal() {
+            const guardianEmail = '{{ user.guardian_email if user and user.guardian_email else "" }}';
+            
+            if (!guardianEmail) {
+                alert('보호자 이메일이 등록되어 있지 않습니다.\n프로필에서 이메일을 등록해주세요.');
+                return;
+            }
+            
+            document.getElementById('emailModal').classList.add('active');
+            
+            // 최근 스캔 정보 불러오기
+            await loadRecentScans();
+        }
+        
+        // 이메일 모달 닫기
+        function closeEmailModal() {
+            document.getElementById('emailModal').classList.remove('active');
+        }
+        
+        // 최근 스캔 정보 불러오기
+        async function loadRecentScans() {
+            if (!userId) return;
+            
+            try {
+                const response = await fetch(`/api/history/${userId}?limit=5`);
+                const result = await response.json();
+                
+                const previewDiv = document.getElementById('scanResultsPreview');
+                const summaryDiv = document.getElementById('summaryPreview');
+                
+                if (result.success && result.history && result.history.length > 0) {
+                    let html = '';
+                    let dangerCount = 0;
+                    let warningCount = 0;
+                    let safeCount = 0;
+                    
+                    result.history.slice(0, 3).forEach(scan => {
+                        // 안전 상태 확인
+                        let statusClass = '';
+                        let statusText = '안전';
+                        
+                        if (scan.safety_result) {
+                            const safety = scan.safety_result;
+                            if (safety.danger_items && safety.danger_items.length > 0) {
+                                statusClass = 'danger';
+                                statusText = '⚠️ 위험';
+                                dangerCount++;
+                            } else if (safety.warning_items && safety.warning_items.length > 0) {
+                                statusClass = 'warning';
+                                statusText = '⚡ 주의';
+                                warningCount++;
+                            } else {
+                                safeCount++;
+                            }
+                        }
+                        
+                        // 스캔 날짜 포맷
+                        const scanDate = new Date(scan.scan_date).toLocaleDateString('ko-KR');
+                        
+                        // 성분 목록
+                        const ingredients = scan.ingredients || [];
+                        const ingredientNames = ingredients.map(i => i.name || i).slice(0, 3).join(', ');
+                        
+                        html += `
+                            <div class="scan-item ${statusClass}">
+                                <strong>${scan.product_name || '영양제'}</strong> <span style="color:#888; font-size:0.8em;">(${scanDate})</span><br>
+                                <span style="font-size:0.85em;">성분: ${ingredientNames}${ingredients.length > 3 ? ' 외 ' + (ingredients.length - 3) + '개' : ''}</span><br>
+                                <span style="font-size:0.85em; color:${statusClass === 'danger' ? '#FF6B6B' : statusClass === 'warning' ? '#FFA500' : '#4CAF50'}">
+                                    판정: ${statusText}
+                                </span>
+                            </div>
+                        `;
+                    });
+                    
+                    previewDiv.innerHTML = html;
+                    
+                    // 종합 의견 생성
+                    let summary = '';
+                    if (dangerCount > 0) {
+                        summary = `⚠️ 최근 스캔 중 <strong style="color:#FF6B6B">${dangerCount}건의 위험</strong> 판정이 있습니다. 전문가 상담을 권장합니다.`;
+                    } else if (warningCount > 0) {
+                        summary = `⚡ 최근 스캔 중 <strong style="color:#FFA500">${warningCount}건의 주의</strong> 판정이 있습니다. 섭취량 조절을 권장합니다.`;
+                    } else {
+                        summary = `✅ 최근 스캔 결과 모두 <strong style="color:#4CAF50">안전</strong> 판정입니다. 현재 섭취 패턴을 유지해주세요.`;
+                    }
+                    summaryDiv.innerHTML = `<p>${summary}</p>`;
+                    
+                } else {
+                    previewDiv.innerHTML = '<div class="no-scan-msg">최근 스캔 기록이 없습니다.</div>';
+                    summaryDiv.innerHTML = '<p>스캔 기록이 없어 분석할 수 없습니다.</p>';
+                }
+                
+            } catch (error) {
+                console.log('스캔 정보 로드 실패:', error);
+                document.getElementById('scanResultsPreview').innerHTML = 
+                    '<div class="no-scan-msg">스캔 정보를 불러올 수 없습니다.</div>';
+            }
+        }
+        
+        // 이메일 전송
+        async function sendEmailToGuardian() {
+            const guardianEmail = '{{ user.guardian_email if user and user.guardian_email else "" }}';
+            const guardianName = '{{ user.guardian_name if user and user.guardian_name else "보호자" }}';
+            const userName = '{{ user.name if user else "" }}';
+            
+            if (!guardianEmail) {
+                alert('보호자 이메일이 등록되어 있지 않습니다.');
+                return;
+            }
+            
+            // 전송 확인
+            if (!confirm(`${guardianName}님(${guardianEmail})에게 리포트를 전송하시겠습니까?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/email/send-report', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        to_email: guardianEmail,
+                        to_name: guardianName,
+                        user_name: userName
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('✅ 이메일이 전송되었습니다!');
+                    closeEmailModal();
+                } else {
+                    alert('전송 실패: ' + result.message);
+                }
+            } catch (error) {
+                alert('오류: ' + error.message);
+            }
+        }
+        
+        // 이메일 모달 외부 클릭 시 닫기
+        document.getElementById('emailModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEmailModal();
+            }
+        });
+    </script>
+</body>
+</html>
